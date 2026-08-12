@@ -357,6 +357,23 @@ html[data-theme="dark"] .courier-app{background:rgba(9,23,38,.95);border-color:r
 .assignment-thread small{color:var(--muted);font-size:.74rem}
 .assignment-thread p{margin:5px 0 0}
 html[data-theme="dark"] .assignment-thread li{background:rgba(255,255,255,.04)}
+.signature-canvas{display:block;width:100%;height:200px;margin:12px 0 4px;border:1px dashed var(--line-strong,#cad0d6);border-radius:12px;background:#fff;touch-action:none;cursor:crosshair}
+.signature-pad-actions{display:flex;justify-content:flex-end}
+.wad-document-wrap{max-height:60vh;overflow:auto;padding:0 22px}
+.wad-document{font-size:13px;line-height:1.5;color:var(--ink,#1c2530)}
+.wad-document h1{font-size:16px;text-align:center;margin:8px 0 2px}
+.wad-document .wad-sub{text-align:center;color:var(--muted,#5b6773);margin:0 0 14px;font-style:italic}
+.wad-document h2{font-size:13px;margin:16px 0 6px;text-transform:uppercase;letter-spacing:.02em}
+.wad-document p{margin:0 0 8px}
+.wad-document .wad-note{color:var(--muted,#5b6773);font-size:12px;font-style:italic}
+.wad-table{width:100%;border-collapse:collapse;margin:6px 0 12px}
+.wad-table th,.wad-table td{border:1px solid var(--line-strong,#cad0d6);padding:6px 8px;text-align:left;font-size:12px;vertical-align:top}
+.wad-table th{background:var(--surface-2,#f4f6f8);font-weight:600}
+.wad-gap{color:var(--muted,#5b6773)}
+.wad-signatures td{width:50%}
+.wad-sign-cell{min-height:60px}
+.wad-signature-img{max-width:220px;max-height:80px;display:block;margin-top:4px}
+@media print{.modal-head,.application-detail-actions,.modal-x{display:none!important}.modal-backdrop{position:static;background:none}.modal{box-shadow:none;max-height:none}.wad-document-wrap{max-height:none;overflow:visible}}
 
 </style>
 </head>
@@ -4624,6 +4641,136 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     <footer class="application-detail-actions"><button class="btn" type="button" data-act="ops:modal:close"><i data-lucide="x"></i>Закрыть</button><span></span><button class="btn btn-primary" type="button" data-act="ops:client-contract:sign:${esc(deal.id)}"><i data-lucide="check"></i>Подписать договор</button></footer>
   </section></div>`;
   }
+  // Реквизиты Nurfin как стороны Wa'd — постоянны для всех сделок демо.
+  var NURFIN_ORG = { name: "«NUR FINANCE» MChJ", inn: "[STIR to'ldiriladi]", address: "Toshkent shahri" };
+  var wadForm = { place: "Toshkent shahri", clientAddress: "", repName: "", repPosition: "", repBasis: "Ustav" };
+  var signatureHasStroke = false;
+  function wadBlank(value) {
+    return value ? esc(value) : `<span class="wad-gap">[__________]</span>`;
+  }
+  function wadSum(n) {
+    return n || n === 0 ? `${Math.round(n).toLocaleString("ru-RU")} сум` : `<span class="wad-gap">[____________]</span> сум`;
+  }
+  function buildWadFieldsFromLocal(deal) {
+    const extras = getExtras(deal.id) ?? {};
+    const c = ops.clients.find((x) => x.inn === deal.clientInn);
+    const s = ops.suppliers.find((x) => x.inn === deal.supplierInn);
+    const product2 = productFor(deal.id);
+    const items = extras.items ?? [];
+    const amount = Number(deal.requestedAmount) / 100;
+    const markup = product2 ? amount * product2.markupRate : 0;
+    const deposit = product2 ? amount * product2.depositRate : 0;
+    const promise = deal.promise;
+    return {
+      dealId: deal.id,
+      place: promise?.place ?? wadForm.place,
+      date: promise?.registeredAt ? new Date(promise.registeredAt).toLocaleDateString("ru-RU") : new Date().toLocaleDateString("ru-RU"),
+      client: { name: c?.name ?? deal.clientInn, inn: c?.inn ?? deal.clientInn, address: promise?.clientAddress ?? wadForm.clientAddress, repName: promise?.repName ?? wadForm.repName, repPosition: promise?.repPosition ?? wadForm.repPosition, repBasis: wadForm.repBasis },
+      supplier: { name: s?.name ?? deal.supplierInn, inn: s?.inn ?? deal.supplierInn },
+      items: items.map((i) => ({ name: i.name, sku: i.sku, qty: i.qty, unitPrice: Number(i.unitPrice) / 100 })),
+      deliveryAddress: promise?.clientAddress ?? wadForm.clientAddress,
+      amount, markup, markupRate: product2?.markupRate ?? null,
+      termDaysProduct: product2?.code?.split("-")[1] ?? null, installments: product2?.installments ?? null,
+      deposit, wadTermDays: 30, signatureUrl: promise?.signatureUrl ?? null
+    };
+  }
+  /** Wa'd hujjatining to'liq matni — faqat lokal maydonlardan yig'iladi, hech qanday server so'rovi yo'q. */
+  function wadDocumentHtml(f) {
+    const salePrice = f.amount + f.markup;
+    const itemsRows = (f.items?.length ? f.items : [{}]).slice(0, 6).map((it, i) => `<tr><td>${i + 1}</td><td>${wadBlank(it.name)}</td><td>${wadBlank(it.sku)}</td><td>${it.qty ? esc(String(it.qty)) : wadBlank()}</td><td>${wadBlank(f.supplier.name)}</td><td>${it.unitPrice ? wadSum(it.unitPrice) : wadBlank()}</td></tr>`).join("");
+    return `<article class="wad-document">
+    <h1>PROMISE TO PURCHASE (WA'D)</h1>
+    <p class="wad-sub">Murabaha asosida sotib olish bo'yicha bir tomonlama majburiy va'da</p>
+    <table class="wad-table"><tr><th>Wa'd №</th><th>Sana</th><th>Joy</th></tr><tr><td>${esc(f.dealId)}</td><td>${esc(f.date)}</td><td>${wadBlank(f.place)}</td></tr></table>
+    <h2>1. TOMONLAR</h2>
+    <p><b>1.1. Va'da beruvchi (Customer)</b><br>Tashkilot nomi: ${wadBlank(f.client.name)}<br>STIR: ${wadBlank(f.client.inn)}<br>Manzil: ${wadBlank(f.client.address)}<br>Vakil: ${wadBlank(f.client.repName)}<br>Lavozimi: ${wadBlank(f.client.repPosition)}<br>Asos: ${wadBlank(f.client.repBasis)}<br>keyingi o'rinlarda «Mijoz» yoki «Va'da beruvchi» deb yuritiladi.</p>
+    <p><b>1.2. Kelajakdagi sotuvchi</b><br>${esc(NURFIN_ORG.name)}<br>STIR: ${esc(NURFIN_ORG.inn)}<br>Manzil: ${esc(NURFIN_ORG.address)}<br>keyingi o'rinlarda «Nurfin» deb yuritiladi.</p>
+    <h2>2. VA'DANING MAQSADI</h2>
+    <p>2.1. Mijoz o'z biznes ehtiyojlari uchun quyida ko'rsatilgan tovar(lar)ni sotib olish istagini bildiradi va Nurfin'dan ushbu tovar(lar)ni Mijozga keyinchalik Murabaha savdosi asosida sotish maqsadida sotib olishini so'raydi.</p>
+    <p>2.2. Mijoz Nurfin ushbu Wa'dga tayanib tegishli tovarni yetkazib beruvchidan sotib olganidan, tovar ustidan mulk huquqini va Shariat talablariga muvofiq zarur qabd/egalikni qo'lga kiritganidan so'ng, mazkur tovarni Nurfin'dan Murabaha orqali sotib olishga bir tomonlama va majburiy va'da beradi (Wa'd).</p>
+    <p>2.3. Ushbu Wa'd Murabaha oldi-sotdi shartnomasi hisoblanmaydi, tovar ushbu hujjat imzolanishi bilan Mijozga sotilgan hisoblanmaydi va Mijoz zimmasida Murabaha savdo narxi bo'yicha qarzdorlik yuzaga keltirmaydi.</p>
+    <p>2.4. Murabaha oldi-sotdi shartnomasi Nurfin tovarni o'z nomidan sotib olganidan va unga nisbatan Shariat talablariga muvofiq mulk huquqi hamda qabdni qo'lga kiritganidan keyin alohida tuziladi.</p>
+    <h2>3. TOVAR TO'G'RISIDA MA'LUMOT</h2>
+    <p>Tovar nomi: ${wadBlank(f.items?.[0]?.name)}<br>Miqdori: ${f.items?.[0]?.qty ? esc(String(f.items[0].qty)) : wadBlank()}<br>Yetkazib beruvchi: ${wadBlank(f.supplier.name)}<br>Taxminiy xarid qiymati: ${wadSum(f.amount)}<br>Yetkazib berish manzili: ${wadBlank(f.deliveryAddress)}</p>
+    <p class="wad-note">Tovarning batafsil tavsifi ushbu Wa'dning 1-ilovasi — Tovar spetsifikatsiyasida keltirilgan.</p>
+    <h2>4. MUROBAHA SHARTLARINING INDIKATIV PARAMETRLARI</h2>
+    <p>Nurfinning taxminiy xarid qiymati: ${wadSum(f.amount)}<br>Murabaha ustamasi: ${wadSum(f.markup)}${f.markupRate ? ` (${(f.markupRate * 100).toFixed(1)}%)` : ""}<br>Taxminiy Murabaha sotuv narxi: ${wadSum(salePrice)}<br>To'lov muddati: ${f.termDaysProduct ? `${esc(String(f.termDaysProduct))} kun` : wadBlank()}<br>To'lov davriyligi: oylik<br>Bo'lib to'lovlar soni: ${f.installments ? esc(String(f.installments)) : wadBlank()}</p>
+    <p class="wad-note">Yakuniy Murabaha narxi va to'lov jadvali Nurfinning tovarni sotib olish bilan bog'liq Shariat tomonidan ruxsat etilgan haqiqiy xarajatlari va tomonlar kelishgan Murabaha ustamasi asosida Murabaha shartnomasida belgilanadi.</p>
+    <h2>5. NURFIN TOMONIDAN TOVARNI SOTIB OLISH</h2>
+    <p>5.1. Ushbu Wa'd Mijoz tomonidan berilganidan so'ng Nurfin o'z qarori va ichki tasdiqlash jarayonlari asosida tovarni Supplier'dan sotib olishi mumkin.</p>
+    <p>5.2. Supplier bilan tovarni sotib olish bo'yicha bitimning xaridori Nurfin bo'ladi, bundan Mijoz Nurfinning alohida Wakalah topshirig'i asosida agent sifatida harakat qiladigan holatlar mustasno.</p>
+    <p>5.3. Nurfin tovarni sotib olgandan keyin tovar Nurfin mulkiga o'tishi va Nurfin tovar bilan bog'liq mulkdorlik riskini Shariat talablariga muvofiq o'z zimmasiga olishi lozim.</p>
+    <p>5.4. Tovar Nurfin mulkiga o'tishi va zarur qabd amalga oshirilishidan oldin Mijoz bilan Murabaha oldi-sotdi shartnomasi tuzilmaydi.</p>
+    <h2>6. MIJOZNING VA'DASI</h2>
+    <p>6.1. Mijoz Nurfin ushbu Wa'dga tayanib 3-bo'limda ko'rsatilgan tovarni sotib olganidan va unga nisbatan Shariat talablariga muvofiq mulk huquqi hamda qabdni qo'lga kiritganidan so'ng, Nurfin tomonidan taqdim etiladigan Murabaha shartnomasini tuzishga va tovarni kelishilgan Murabaha shartlari asosida sotib olishga va'da beradi.</p>
+    <p>6.2. Mijoz mazkur Wa'dni Nurfinning tovarni sotib olishiga sabab bo'luvchi va Nurfin tomonidan ushbu Wa'dga tayanilishiga mo'ljallangan va'da sifatida berayotganini tasdiqlaydi.</p>
+    <p>6.3. Ushbu Wa'dning majburiyligi amaldagi qonunchilik, tomonlar o'rtasidagi kelishuv va Nurfin Shariat kengashi tomonidan tasdiqlangan Shariat qoidalari doirasida qo'llaniladi.</p>
+    <h2>7. VA'DANI BAJARMASLIK</h2>
+    <p>7.1. Agar Nurfin ushbu Wa'dga tayanib tovarni sotib olganidan keyin Mijoz Shariat tomonidan tan olinadigan asosli sabab mavjud bo'lmagan holda o'z va'dasini bajarmasa, Mijozning javobgarligi Nurfinning mazkur Wa'dga tayanishi natijasida yuzaga kelgan haqiqiy va bevosita zarar (actual direct loss) bilan cheklanadi.</p>
+    <p>7.2. Bunday zarar, jumladan, Nurfin tovarni uchinchi shaxsga sotishga majbur bo'lgan holatda, Nurfinning tovarni sotib olish uchun qilgan haqiqiy xarajatlari bilan uni realizatsiya qilishdan olingan sof tushum o'rtasidagi manfiy farqni o'z ichiga olishi mumkin.</p>
+    <p>7.3. Kompensatsiya Nurfin Murabaha bitimi tuzilganida olishi kutilgan foydani, kelajakdagi Murabaha ustamasini yoki boy berilgan foydani undirish vositasi sifatida ishlatilmaydi.</p>
+    <p>7.4. Nurfin zarar miqdorini asoslovchi tegishli hujjatlarni taqdim etishi lozim.</p>
+    <h2>8. HAMISH JIDDIYYAH / SECURITY DEPOSIT</h2>
+    <p class="wad-note">Ushbu bo'lim faqat Nurfin mahsulot strukturasi bo'yicha qo'llaniladigan holatlarda ishlatiladi.</p>
+    <p>8.1. Mijoz o'zining tovarni sotib olishga bo'lgan jiddiyligini tasdiqlash maqsadida ${wadSum(f.deposit)} miqdorida Hamish Jiddiyyah (security deposit) taqdim etishi mumkin.</p>
+    <p>8.2. Mazkur summa Murabaha bo'yicha oldindan to'langan savdo narxi hisoblanmaydi.</p>
+    <p>8.3. Agar Mijoz Wa'dni bajarsa, mazkur summa tomonlarning kelishuvi va Shariat kengashi tasdiqlagan mahsulot qoidalariga muvofiq Mijozga qaytarilishi yoki Murabaha bo'yicha tegishli to'lovlarga hisobga olinishi mumkin.</p>
+    <p>8.4. Agar Mijoz Wa'dni bajarmasa, Nurfin faqat Shariat talablariga muvofiq isbotlangan haqiqiy zararni ushbu summadan qoplashi mumkin. Qolgan summa Mijozga qaytariladi.</p>
+    <h2>9. MUROBAHA SHARTNOMASINING ALOHIDALIGI</h2>
+    <p>9.1. Tomonlar quyidagi huquqiy va Shariat jarayonlari bir-biridan alohida ekanligini tan oladilar: 1-bosqich — Purchase Request; 2-bosqich — Wa'd; 3-bosqich — Purchase &amp; Ownership; 4-bosqich — Murabaha Offer &amp; Contract; 5-bosqich — Delivery &amp; Repayment.</p>
+    <p>9.2. Ushbu Wa'dning imzolanishi Murabaha savdosining avtomatik ravishda tuzilganligini anglatmaydi.</p>
+    <h2>10. SHARIAT TALABLARI</h2>
+    <p>10.1. Ushbu Wa'd va undan kelib chiqadigan Murabaha operatsiyasi Islom moliyasi tamoyillari hamda Nurfin tomonidan qabul qilingan Shariat standartlariga muvofiq amalga oshiriladi.</p>
+    <p>10.2. Nurfin tovarni Mijozga sotishdan oldin tovar ustidan Shariat talablariga muvofiq mulk huquqi va qabdni qo'lga kiritishi lozim.</p>
+    <p>10.3. Nurfin tovarni sotib olish va uni Mijozga Murabaha asosida sotish o'rtasidagi davrda Shariat talablariga muvofiq mulkdor sifatidagi tegishli risklarni o'z zimmasiga oladi.</p>
+    <p>10.4. Wa'd va keyingi Murabaha shartnomasi bitta oldi-sotdi shartnomasi sifatida talqin qilinmasligi lozim.</p>
+    <h2>11. AMAL QILISH MUDDATI</h2>
+    <p>Ushbu Wa'd imzolangan kundan boshlab kuchga kiradi va quyidagilardan biri yuz bergunga qadar amal qiladi: tomonlar o'rtasida tegishli Murabaha shartnomasi tuzilishi; Nurfin Mijozga tovarni sotib olishni amalga oshirmasligi haqida xabar berishi; ${f.wadTermDays ?? 30} kunlik Wa'd muddati tugashi; Shariat yoki qonunchilik nuqtai nazaridan bitimni amalga oshirish mumkin bo'lmay qolishi.</p>
+    <h2>12. YAKUNIY QOIDALAR</h2>
+    <p>12.1. Ushbu Wa'd Mijoz tomonidan Nurfin foydasiga berilgan bir tomonlama va'dadir.</p>
+    <p>12.2. Ushbu hujjatning hech bir qoidasi Nurfin tovarni o'z mulkiga olmasdan turib Mijozga sotgan deb talqin qilinmaydi.</p>
+    <p>12.3. Ushbu Wa'd O'zbekiston Respublikasi qonunchiligi, Nurfinning tegishli Shariat siyosatlari va qo'llaniladigan Shariat standartlari doirasida talqin qilinadi.</p>
+    <p>12.4. Shariat talablari bo'yicha masala yuzaga kelganda, Nurfinning vakolatli Shariat kengashi / Shariat maslahatchisining tegishli xulosasi inobatga olinadi.</p>
+    <h2>13. MIJOZNING TASDIG'I</h2>
+    <p>Mijoz quyidagilarni tasdiqlaydi: ushbu Wa'dning mazmunini tushunganini; Wa'd Murabaha oldi-sotdi shartnomasi emasligini; Nurfin hali ushbu bosqichda tovarni Mijozga sotmaganligini; Nurfin ushbu Wa'dga tayanib Supplier'dan tovar sotib olishi mumkinligini; Nurfin tovarni o'z mulkiga olganidan keyingina alohida Murabaha shartnomasi tuzilishini.</p>
+    <h2>14. IMZOLAR</h2>
+    <table class="wad-table wad-signatures"><tr><th>VA'DA BERUVCHI — MIJOZ</th><th>QABUL QILGAN — NURFIN</th></tr>
+    <tr><td>Tashkilot: ${wadBlank(f.client.name)}</td><td>Tashkilot: ${esc(NURFIN_ORG.name)}</td></tr>
+    <tr><td>Vakil F.I.Sh.: ${wadBlank(f.client.repName)}</td><td>Vakil F.I.Sh.: ________________________</td></tr>
+    <tr><td>Lavozimi: ${wadBlank(f.client.repPosition)}</td><td>Lavozimi: ________________________</td></tr>
+    <tr><td class="wad-sign-cell">Imzo:${f.signatureUrl ? `<br><img class="wad-signature-img" src="${esc(f.signatureUrl)}" alt="Подпись клиента">` : " ________________________"}</td><td>Imzo: ________________________</td></tr>
+    <tr><td>Sana: ${esc(f.date)}</td><td>Sana: ________________________</td></tr></table>
+    <h2>1-ILOVA — TOVAR SPETSIFIKATSIYASI</h2>
+    <table class="wad-table wad-items"><tr><th>№</th><th>Tovar</th><th>SKU</th><th>Miqdor</th><th>Supplier</th><th>Narx</th></tr>${itemsRows}</table>
+    <p>Umumiy taxminiy xarid qiymati: ${wadSum(f.amount)}</p>
+  </article>`;
+  }
+  function wadPreviewModal(f, backAct) {
+    return `<div class="modal-backdrop"><section class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="wad-preview-title">
+    <div class="modal-head"><div><span class="eyebrow">Предпросмотр</span><h2 id="wad-preview-title">Wa'd · ${esc(f.dealId)}</h2></div><button type="button" class="modal-x" data-act="ops:modal:close" aria-label="Закрыть"><i data-lucide="x"></i></button></div>
+    <div class="wad-document-wrap">${wadDocumentHtml(f)}</div>
+    <footer class="application-detail-actions">${backAct ? `<button class="btn" type="button" data-act="${backAct}"><i data-lucide="arrow-left"></i>Назад</button>` : `<button class="btn" type="button" data-act="ops:modal:close"><i data-lucide="x"></i>Закрыть</button>`}<span></span><button class="btn btn-primary" type="button" data-act="ops:client-wad:print"><i data-lucide="printer"></i>Печать / PDF</button></footer>
+  </section></div>`;
+  }
+  function clientWadModal(deal) {
+    const extras = getExtras(deal.id);
+    const itemsLabel = extras?.items?.map((item) => item.name).join(", ") ?? deal.clientInn;
+    return `<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="client-wad-title">
+    <div class="modal-head"><div><span class="eyebrow">Обещание купить · wa'd · ${esc(deal.id)}</span><h2 id="client-wad-title">${esc(itemsLabel)}</h2></div><button type="button" class="modal-x" data-act="ops:modal:close" aria-label="Закрыть"><i data-lucide="x"></i></button></div>
+    <div style="padding:0 22px 6px">
+      <p class="info-box">Распишитесь пальцем или мышью — это ваше обязывающее обещание купить товар. Без него закупка у поставщика не начнётся (SCCP-1).</p>
+      <div class="form-grid">
+        <label>Ф.И.О. представителя<input id="wad-rep-name" type="text" value="${esc(wadForm.repName)}" placeholder="Иванов Иван" required></label>
+        <label>Должность<input id="wad-rep-position" type="text" value="${esc(wadForm.repPosition)}" placeholder="Директор" required></label>
+        <label class="wide">Адрес организации<input id="wad-client-address" type="text" value="${esc(wadForm.clientAddress)}" placeholder="г. Ташкент, ул. ..." required></label>
+      </div>
+      <button type="button" class="btn btn-sm" data-act="ops:client-wad:preview:${esc(deal.id)}"><i data-lucide="file-text"></i>Прочитать текст обещания</button>
+      <canvas id="wad-signature-canvas" class="signature-canvas" width="600" height="220"></canvas>
+      <div class="signature-pad-actions"><button type="button" class="btn btn-sm" data-act="ops:client-wad:clear"><i data-lucide="eraser"></i>Очистить</button></div>
+    </div>
+    <footer class="application-detail-actions"><button class="btn" type="button" data-act="ops:modal:close"><i data-lucide="x"></i>Отмена</button><span></span><button class="btn btn-primary" type="button" data-act="ops:client-wad:sign:${esc(deal.id)}"><i data-lucide="check"></i>Подтвердить</button></footer>
+  </section></div>`;
+  }
   function operationsModal() {
     if (!ops?.modal) return "";
     const { kind, id } = ops.modal;
@@ -4643,6 +4790,14 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     if (kind === "client-contract" && id) {
       const deal = getDeal(id);
       return deal ? clientContractModal(deal) : "";
+    }
+    if (kind === "client-wad" && id) {
+      const deal = getDeal(id);
+      return deal ? clientWadModal(deal) : "";
+    }
+    if (kind === "wad-preview" && id) {
+      const deal = getDeal(id);
+      return deal ? wadPreviewModal(buildWadFieldsFromLocal(deal), `ops:client-wad:open:${id}`) : "";
     }
     const close = `<button type="button" class="btn" data-act="ops:modal:close"><i data-lucide="x"></i>Отмена</button>`;
     let title = "";
@@ -5317,6 +5472,61 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
         }
         ops.modal = null;
         changed(ok ? "Договор мурабаха подписан. Ожидайте доставку товара." : void 0);
+        return;
+      }
+      return;
+    }
+    if (verb === "client-wad") {
+      if (kind === "open" && id) {
+        signatureHasStroke = false;
+        ops.modal = { kind: "client-wad", id };
+        changed();
+        return;
+      }
+      if (kind === "clear") {
+        const canvas = document.getElementById("wad-signature-canvas");
+        if (canvas) canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+        signatureHasStroke = false;
+        return;
+      }
+      if (kind === "preview" && id) {
+        ops.modal = { kind: "wad-preview", id };
+        changed();
+        return;
+      }
+      if (kind === "print") {
+        window.print();
+        return;
+      }
+      if (kind === "sign" && id) {
+        if (!wadForm.repName.trim() || !wadForm.repPosition.trim() || !wadForm.clientAddress.trim()) {
+          notify("error", "Заполните ФИО, должность представителя и адрес организации перед подписанием.");
+          return;
+        }
+        if (!signatureHasStroke) {
+          notify("error", "Распишитесь пальцем или мышью перед подтверждением.");
+          return;
+        }
+        const canvas = document.getElementById("wad-signature-canvas");
+        const signatureUrl = canvas ? canvas.toDataURL("image/png") : null;
+        const ok = runCommandRouted(id, { kind: "REGISTER_PROMISE", documentId: `WAD-${id}`, binding: true }, "u-02");
+        if (ok) {
+          update((s) => {
+            const signed = s.deals.find((d) => d.id === id);
+            if (signed?.promise) {
+              Object.assign(signed.promise, {
+                place: wadForm.place,
+                repName: wadForm.repName,
+                repPosition: wadForm.repPosition,
+                clientAddress: wadForm.clientAddress,
+                signatureUrl
+              });
+            }
+          });
+        }
+        ops.modal = null;
+        signatureHasStroke = false;
+        changed(ok ? "Обещание купить зарегистрировано. Далее — счёт поставщика." : void 0);
         return;
       }
       return;
@@ -6483,6 +6693,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     return `<nav class="client-bottom-nav">${entries.map(([id, icon, label]) => `<button type="button" class="${clientTab === id ? "active" : ""}" data-act="portal:client-tab:${id}"><i data-lucide="${icon}"></i><span>${label}</span></button>`).join("")}</nav>`;
   }
   function clientTaskAct(dealId, action) {
+    if (action === "promise") return `ops:client-wad:open:${dealId}`;
     if (action === "accept") return `ops:client-offer:open:${dealId}`;
     if (action === "sign") return `ops:client-contract:open:${dealId}`;
     return `do:${dealId}:${action}`;
@@ -7711,6 +7922,59 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
       attrs: { "aria-hidden": "true", "stroke-width": "1.8" }
     });
   }
+  // Подпись пальцем/мышью на canvas — обещание купить (wa'd) в кабинете
+  // клиента. Слушатели глобальные: canvas существует, только пока открыта
+  // модалка, отдельный «монтаж» не нужен.
+  var signatureDrawing = false;
+  function signatureCanvasPoint(canvas, event2) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: (event2.clientX - rect.left) * (canvas.width / rect.width),
+      y: (event2.clientY - rect.top) * (canvas.height / rect.height)
+    };
+  }
+  document.addEventListener("pointerdown", (event2) => {
+    const canvas = event2.target.closest?.("#wad-signature-canvas");
+    if (!canvas) return;
+    event2.preventDefault();
+    signatureDrawing = true;
+    const ctx = canvas.getContext("2d");
+    const p = signatureCanvasPoint(canvas, event2);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    try {
+      canvas.setPointerCapture(event2.pointerId);
+    } catch {
+    }
+  });
+  document.addEventListener("pointermove", (event2) => {
+    if (!signatureDrawing) return;
+    const canvas = event2.target.closest?.("#wad-signature-canvas");
+    if (!canvas) return;
+    event2.preventDefault();
+    const ctx = canvas.getContext("2d");
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "#12253f";
+    const p = signatureCanvasPoint(canvas, event2);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    signatureHasStroke = true;
+  });
+  document.addEventListener("pointerup", () => {
+    signatureDrawing = false;
+  });
+  document.addEventListener("pointercancel", () => {
+    signatureDrawing = false;
+  });
+  document.addEventListener("input", (event2) => {
+    const target = event2.target;
+    if (!(target instanceof HTMLInputElement)) return;
+    if (target.id === "wad-rep-name") wadForm.repName = target.value;
+    else if (target.id === "wad-rep-position") wadForm.repPosition = target.value;
+    else if (target.id === "wad-client-address") wadForm.clientAddress = target.value;
+  });
   document.addEventListener("click", (event2) => {
     const target = event2.target;
     if (getState().notice && !target?.closest(".notice")) {
