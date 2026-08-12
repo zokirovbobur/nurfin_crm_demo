@@ -8086,12 +8086,14 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
       resetAll();
       resetOperations();
       resetPrdModules();
+      simulationResetContext();
       render();
       return;
     }
     if (act === "wipe") {
       wipeAll();
       wipeOperations();
+      simulationResetContext();
       notify("ok", "Все заявки, сделки и история очищены. Клиенты, поставщики и продукты сохранены — можно начинать демо с нуля.");
       render();
       return;
