@@ -5976,6 +5976,20 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     </dl>
   </div>
 
+  ${deal.promise ? `<div class="card">
+    <div class="card-head">
+      <h2>Wa'd — обещание клиента</h2>
+      <span class="spacer"></span>
+      <button class="btn btn-sm" type="button" data-act="ops:client-wad:preview:${esc(deal.id)}"><i data-lucide="file-text"></i>Открыть документ</button>
+    </div>
+    <dl class="kv">
+      <dt>Документ</dt><dd>${esc(deal.promise.documentId)}</dd>
+      <dt>Зарегистрировано</dt><dd>${new Date(deal.promise.registeredAt).toLocaleString("ru-RU")}</dd>
+      ${deal.promise.repName ? `<dt>Представитель</dt><dd>${esc(deal.promise.repName)}${deal.promise.repPosition ? ` · ${esc(deal.promise.repPosition)}` : ""}</dd>` : ""}
+    </dl>
+    ${deal.promise.signatureUrl ? `<div><span class="eyebrow">Подпись клиента</span><br><img class="wad-signature-img" src="${esc(deal.promise.signatureUrl)}" alt="Подпись клиента"></div>` : `<div class="info-box">Обещание зарегистрировано без рукописной подписи (данные внесены оператором вручную).</div>`}
+  </div>` : ""}
+
   <div class="section-title">Следующее действие</div>
   <div class="card deal-action-card">${actions(deal)}</div>
 
