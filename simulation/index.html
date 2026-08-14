@@ -551,9 +551,12 @@ html[data-theme="dark"] .assignment-thread li{background:rgba(255,255,255,.04)}
     APPROVE_SUPPLIER_PAYMENT: ["R-03", "R-SYS"],
     CONFIRM_SUPPLIER_PAYMENT: ["R-03", "R-SYS"],
     REGISTER_OWNERSHIP_EVIDENCE: ["R-01", "R-02"],
-    // Исключительное право шариатского контролёра. Не имеет ни Operations Manager,
-    // ни системный администратор, ни перевозчик — обход невозможен.
-    CONFIRM_OWNERSHIP: ["R-05"],
+    // Подтверждение владения — это проверка полноты формального комплекта
+    // доказательств (REQUIRED_OWNERSHIP_EVIDENCE), а не субъективное суждение,
+    // поэтому его проводит система (R-SYS) сразу после регистрации комплекта.
+    // R-05 сохраняет право ручного подтверждения (например, вне автоматизации)
+    // и остаётся единственной ролью, которая может отозвать владение.
+    CONFIRM_OWNERSHIP: ["R-05", "R-SYS"],
     REVOKE_OWNERSHIP: ["R-05"],
     // Оферта целиком выводится из уже зафиксированных фактов: себестоимость — из
     // проведённого платежа, ставка и срок — из продукта, график считается. Человек
@@ -3689,6 +3692,12 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
         reason: "платёж исполнен — товар готов к забору"
       };
     }
+    if (deal.ownership && !isOwnershipConfirmed(deal) && !deal.ownership.revokedAt && hasCompleteEvidence(deal.ownership.evidence)) {
+      return {
+        command: { kind: "CONFIRM_OWNERSHIP" },
+        reason: "система проверила комплект доказательств владения на соответствие требованиям Шариата — ручное подтверждение не требуется"
+      };
+    }
     if (isOwnershipConfirmed(deal) && !deal.offer) {
       const product2 = productFor(deal.id);
       return {
@@ -5161,7 +5170,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
         recordUploadedDocument(form, "handoverEvidence", dealId, "Владение", "Акт передачи поставщика", "verified");
         recordUploadedDocument(form, "paymentEvidence", dealId, "Владение", "Подтверждение оплаты поставщику", "verified");
       }
-      message = "Комплект доказательств владения передан шариатскому контролёру.";
+      message = action === "evidence" ? "Комплект доказательств владения полный — система автоматически подтвердила соответствие требованиям Шариата." : "Комплект доказательств владения неполон — требуется ручная проверка шариатского контролёра.";
     } else if (action === "own-confirm") {
       ok = runCommandRouted(dealId, { kind: "CONFIRM_OWNERSHIP" }, "u-05");
       if (ok) recordActionNote(dealId, "Шариатское заключение", str("comment"), "signed");
@@ -6146,7 +6155,10 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
       <span class="spacer"></span>
       ${isController ? pill("Вы — шариатский контролёр", "shariah") : pill("Только просмотр", "neutral")}
     </div>
-    ${isController ? "" : `<div class="blocked-reason">Подтверждение владения — исключительное право роли R-05 (Shariah Controller).
+    <div class="courier-rule">Система автоматически подтверждает владение, как только комплект доказательств
+      полон (соответствует требованиям Шариата). В очереди остаются только сделки с неполным
+      комплектом — они требуют ручной проверки шариатского контролёра (R-05).</div>
+    ${isController ? "" : `<div class="blocked-reason">Ручное подтверждение владения по неполному комплекту — исключительное право роли R-05 (Shariah Controller).
             Переключите роль в верхней панели, чтобы выполнить проверку.</div><br>`}
     ${queue.length === 0 ? `<div class="empty">Сделок, ожидающих проверки, нет</div>` : `<table>
       <thead><tr><th>Сделка</th><th>Тип владения</th><th>Доказательства</th><th class="num">Себестоимость</th><th></th></tr></thead>
