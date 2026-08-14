@@ -4646,6 +4646,10 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
       <div class="section-title">График платежей</div>
       ${offerScheduleTable(offer.schedule)}
       <div class="info-box">Вы уже приняли эту оферту${offer.acceptedAt ? " " + new Date(offer.acceptedAt).toLocaleDateString("ru-RU") : ""}. Подписывая договор, вы подтверждаете покупку товара у Nur Finance на этих условиях — цена и график после подписания не меняются.</div>
+      <div class="section-title">Подпись клиента</div>
+      <p class="info-box">Распишитесь пальцем или мышью — это ваша подпись под договором мурабаха и графиком платежей выше.</p>
+      <canvas id="contract-signature-canvas" class="signature-canvas" width="600" height="220"></canvas>
+      <div class="signature-pad-actions"><button type="button" class="btn btn-sm" data-act="ops:client-contract:clear"><i data-lucide="eraser"></i>Очистить</button></div>
     </div>
     <footer class="application-detail-actions"><button class="btn" type="button" data-act="ops:modal:close"><i data-lucide="x"></i>Закрыть</button><span></span><button class="btn btn-primary" type="button" data-act="ops:client-contract:sign:${esc(deal.id)}"><i data-lucide="check"></i>Подписать договор</button></footer>
   </section></div>`;
@@ -4654,6 +4658,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
   var NURFIN_ORG = { name: "«NUR FINANCE» MChJ", inn: "[STIR to'ldiriladi]", address: "Toshkent shahri" };
   var wadForm = { place: "Toshkent shahri", clientAddress: "", repName: "", repPosition: "", repBasis: "Ustav" };
   var signatureHasStroke = false;
+  var contractSignatureHasStroke = false;
   function wadBlank(value) {
     return value ? esc(value) : `<span class="wad-gap">[__________]</span>`;
   }
@@ -5467,19 +5472,34 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     }
     if (verb === "client-contract") {
       if (kind === "open" && id) {
+        contractSignatureHasStroke = false;
         ops.modal = { kind: "client-contract", id };
         changed();
         return;
       }
+      if (kind === "clear") {
+        const canvas = document.getElementById("contract-signature-canvas");
+        if (canvas) canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+        contractSignatureHasStroke = false;
+        return;
+      }
       if (kind === "sign" && id) {
+        if (!contractSignatureHasStroke) {
+          notify("error", "Распишитесь пальцем или мышью перед подписанием договора.");
+          return;
+        }
+        const canvas = document.getElementById("contract-signature-canvas");
+        const signatureUrl = canvas ? canvas.toDataURL("image/png") : null;
         const ok = runCommandRouted(id, { kind: "SIGN_CONTRACT", documentHash: `sha256:${id.toLowerCase()}` }, "u-02");
         if (ok) {
           update((s) => {
             const signed = s.deals.find((d) => d.id === id);
+            if (signed?.contract) signed.contract.signatureUrl = signatureUrl;
             if (signed?.offer && !s.ledgers[id]) s.ledgers[id] = openLedger(signed.offer.schedule);
           });
         }
         ops.modal = null;
+        contractSignatureHasStroke = false;
         changed(ok ? "Договор мурабаха подписан. Ожидайте доставку товара." : void 0);
         return;
       }
@@ -6105,6 +6125,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
       Равномерное распределение допустимо только для единовременного платежа сроком до 12 месяцев,
       поэтому для рассрочки оно неприменимо.
     </div>
+    ${deal.contract?.signatureUrl ? `<div><span class="eyebrow">Подпись клиента под договором</span><br><img class="wad-signature-img" src="${esc(deal.contract.signatureUrl)}" alt="Подпись клиента"></div>` : ""}
   </div>`;
   }
   function ledgerCard(dealId) {
@@ -7959,8 +7980,12 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
       y: (event2.clientY - rect.top) * (canvas.height / rect.height)
     };
   }
+  function markSignatureStroke(canvas) {
+    if (canvas.id === "contract-signature-canvas") contractSignatureHasStroke = true;
+    else signatureHasStroke = true;
+  }
   document.addEventListener("pointerdown", (event2) => {
-    const canvas = event2.target.closest?.("#wad-signature-canvas");
+    const canvas = event2.target.closest?.(".signature-canvas");
     if (!canvas) return;
     event2.preventDefault();
     signatureDrawing = true;
@@ -7975,7 +8000,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
   });
   document.addEventListener("pointermove", (event2) => {
     if (!signatureDrawing) return;
-    const canvas = event2.target.closest?.("#wad-signature-canvas");
+    const canvas = event2.target.closest?.(".signature-canvas");
     if (!canvas) return;
     event2.preventDefault();
     const ctx = canvas.getContext("2d");
@@ -7986,7 +8011,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     const p = signatureCanvasPoint(canvas, event2);
     ctx.lineTo(p.x, p.y);
     ctx.stroke();
-    signatureHasStroke = true;
+    markSignatureStroke(canvas);
   });
   document.addEventListener("pointerup", () => {
     signatureDrawing = false;
