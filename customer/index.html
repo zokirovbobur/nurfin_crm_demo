@@ -2427,7 +2427,7 @@ html[data-theme="dark"] .adp-hint,html[data-theme="dark"] .mkt-lines-foot{backgr
     vendor: "Интерфейс поставщика",
     courier: "Интерфейс перевозчика",
     agent: "Интерфейс торгового агента",
-    market: "Маркетплейс дистрибьютора"
+    market: "B2B маркетплейс"
   };
   var portal = null;
   var pinnedByUrl = false;
@@ -7019,7 +7019,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
   // Партнёрские адаптеры дистрибьютора (Трек A и Трек B).
   // Трек A — «Интерфейс торгового агента»: финансирование встроено в
   // агентское приложение дистрибьютора, решение принимается в поле.
-  // Трек B — «Маркетплейс дистрибьютора»: «Купить по Мурабахе» как способ
+  // Трек B — «B2B маркетплейс»: «Купить по Мурабахе» как способ
   // оплаты в корзине B2B-маркетплейса.
   // Оба адаптера подают заявки в тот же бэк-офис, что и остальные каналы:
   // отдельного контура нет — только своя точка входа и свой партнёрский код.
@@ -7933,7 +7933,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     { id: "supplier", label: "Интерфейс поставщика", group: "Демо-интерфейсы", icon: "store" },
     { id: "carrier", label: "Интерфейс перевозчика", group: "Демо-интерфейсы", icon: "truck" },
     { id: "agent", label: "Интерфейс торгового агента", group: "Демо-интерфейсы", icon: "user-round" },
-    { id: "market", label: "Маркетплейс дистрибьютора", group: "Демо-интерфейсы", icon: "shopping-bag" },
+    { id: "market", label: "B2B маркетплейс", group: "Демо-интерфейсы", icon: "shopping-bag" },
     { id: "migration", label: "Миграция в банк", group: "Демо-интерфейсы", icon: "landmark" }
   ];
   var TITLES = {
@@ -7958,7 +7958,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     supplier: "Интерфейс поставщика",
     carrier: "Интерфейс перевозчика",
     agent: "Интерфейс торгового агента",
-    market: "Маркетплейс дистрибьютора",
+    market: "B2B маркетплейс",
     migration: "Готовность к миграции в банк",
     audit: "Аудит-след",
     notifications: "Каталог уведомлений"
@@ -8133,7 +8133,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     vendor: { view: "supplier", shell: "vendor-shell", label: "Интерфейс поставщика" },
     courier: { view: "carrier", shell: "courier-shell", label: "Интерфейс перевозчика" },
     agent: { view: "agent", shell: "client-shell", label: "Интерфейс торгового агента" },
-    market: { view: "market", shell: "vendor-shell", label: "Маркетплейс дистрибьютора" }
+    market: { view: "market", shell: "vendor-shell", label: "B2B маркетплейс" }
   };
   function renderPortal(root, kind) {
     const meta = PORTAL_META[kind];
@@ -8392,7 +8392,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
       { href: prefix + "/distributer", label: "Интерфейс поставщика", icon: "store" },
       { href: prefix + "/deliver", label: "Интерфейс перевозчика", icon: "truck" },
       { href: prefix + "/agent", label: "Интерфейс торгового агента", icon: "user-round" },
-      { href: prefix + "/marketplace", label: "Маркетплейс дистрибьютора", icon: "shopping-bag" },
+      { href: prefix + "/marketplace", label: "B2B маркетплейс", icon: "shopping-bag" },
       { href: prefix + "/simulation", label: "Окно симуляции", icon: "route" }
     ];
   }
