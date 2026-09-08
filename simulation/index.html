@@ -375,6 +375,91 @@ html[data-theme="dark"] .assignment-thread li{background:rgba(255,255,255,.04)}
 .wad-signature-img{max-width:220px;max-height:80px;display:block;margin-top:4px}
 @media print{.modal-head,.application-detail-actions,.modal-x{display:none!important}.modal-backdrop{position:static;background:none}.modal{box-shadow:none;max-height:none}.wad-document-wrap{max-height:none;overflow:visible}}
 
+/* --- Партнёрские адаптеры дистрибьютора: агентское приложение и маркетплейс --- */
+.client-bottom-nav.nav-4{grid-template-columns:repeat(4,1fr)}
+.adp-metrics{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0}
+.adp-metrics article{display:flex;align-items:center;gap:9px;padding:12px;border:1px solid rgba(18,37,68,.08);border-radius:18px;background:rgba(255,255,255,.85)}
+.adp-metrics svg{width:18px;height:18px;flex:0 0 auto;color:var(--accent-dark)}
+.adp-metrics span,.adp-metrics strong{display:block}
+.adp-metrics span{color:var(--faint);font-size:8px}
+.adp-metrics strong{font-size:15px;letter-spacing:-.02em}
+.adp-outlet .client-card-actions{margin-top:10px}
+.adp-outlet .client-card-action{width:100%;min-height:36px;font-size:9.5px}
+.adp-paymode{display:grid;gap:8px;margin:12px 0}
+.adp-paymode>button{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
+.adp-paymode>button:hover{border-color:var(--accent)}
+.adp-paymode>button.active{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.adp-paymode svg{width:18px;height:18px;flex:0 0 auto;color:var(--accent-dark)}
+.adp-paymode b,.adp-paymode small{display:block}
+.adp-paymode b{font-size:10.5px}
+.adp-paymode small{margin-top:2px;color:var(--faint);font-size:8.5px}
+.adp-checkout{margin:10px 0;padding:12px;border:1px solid rgba(38,165,161,.2);border-radius:16px;background:var(--surface-2)}
+.adp-checkout>label{display:flex;flex-direction:column;gap:4px;color:var(--muted);font-size:9px}
+.adp-checkout select{width:100%;min-height:40px;border-radius:12px;background:var(--surface);font-size:10.5px}
+.adp-sum{margin:11px 0 9px;display:flex;flex-direction:column;gap:5px}
+.adp-sum>div{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.adp-sum dt{color:var(--muted);font-size:9px}
+.adp-sum dd{font-size:10px;font-weight:650;font-variant-numeric:tabular-nums}
+.adp-sum .total{padding-top:6px;border-top:1px solid var(--line)}
+.adp-sum .total dt{color:var(--ink);font-weight:650}
+.adp-sum .total dd{font-size:12.5px;color:var(--accent-dark);font-weight:800}
+.adp-schedule{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.adp-schedule th{padding:5px 6px;border-bottom:1px solid var(--line);color:var(--faint);font-size:8px;font-weight:700;text-align:left;text-transform:uppercase;letter-spacing:.06em}
+.adp-schedule td{padding:6px;border-bottom:1px solid var(--line);font-size:9.5px}
+.adp-schedule tr:last-child td{border-bottom:0}
+.adp-schedule th:last-child,.adp-schedule td:last-child{text-align:right;font-weight:650}
+.adp-block,.adp-ok,.adp-hint{display:flex;align-items:flex-start;gap:7px;margin-top:9px;padding:9px 10px;border-radius:12px;font-size:8.8px;line-height:1.5}
+.adp-block svg,.adp-ok svg,.adp-hint svg{width:14px;height:14px;flex:0 0 auto;margin-top:1px}
+.adp-block{background:var(--danger-soft);color:var(--danger)}
+.adp-ok{background:var(--ok-soft);color:var(--ok)}
+.adp-hint{background:var(--surface-2);color:var(--muted)}
+.adp-limit{margin:2px 0 8px;color:var(--muted);font-size:9.5px}
+.adp-limit b{color:var(--accent-dark)}
+.adp-order{padding:13px;border:1px solid rgba(18,37,68,.08);border-radius:16px;background:rgba(255,255,255,.85)}
+.adp-order-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.adp-order-head>span{font-family:var(--mono);color:var(--accent-dark);font-size:9px;font-weight:750}
+.adp-order h3{margin:8px 0 3px;font-size:11px;line-height:1.35}
+.adp-order>p{color:var(--muted);font-size:9px}
+.adp-order-meta{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;color:var(--faint);font-size:8.5px}
+.adp-order-meta span{display:flex;align-items:center;gap:4px}
+.adp-order-meta svg{width:12px;height:12px}
+.adp-order>small{display:block;margin-top:7px;color:var(--muted);font-size:8.5px}
+.adp-order-actions{margin-top:10px}
+.adp-order-actions .btn{width:100%;min-height:36px;font-size:9.5px}
+.adp-order-actions .btn svg{width:13px}
+/* маркетплейс */
+.market-workspace{display:flex;flex-direction:column;gap:14px}
+.market-workspace.signin{max-width:560px;margin:0 auto}
+.mkt-panel{overflow:hidden;border:1px solid rgba(18,37,68,.08);border-radius:18px;background:rgba(255,255,255,.82);box-shadow:var(--shadow)}
+.mkt-panel-body{padding:16px 18px}
+.mkt-catalog{display:flex;flex-direction:column;gap:12px}
+.mkt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.mkt-card{display:flex;flex-direction:column;gap:3px;padding:15px;border:1px solid rgba(18,37,68,.08);border-radius:16px;background:rgba(255,255,255,.85);box-shadow:var(--shadow)}
+.mkt-card.blocked{opacity:.6}
+.mkt-card-icon{width:38px;height:38px;display:grid;place-items:center;margin-bottom:6px;border-radius:13px;background:var(--accent-soft);color:var(--accent-dark)}
+.mkt-card-icon svg{width:19px}
+.mkt-card small{color:var(--accent-dark);font-size:8px;font-weight:700}
+.mkt-card h3{margin:2px 0;font-size:11px;line-height:1.35}
+.mkt-card p{color:var(--faint);font-size:8px}
+.mkt-card em{color:var(--danger);font-size:8px;font-style:normal}
+.mkt-card strong{margin:8px 0 10px;font-size:13px;letter-spacing:-.02em}
+.mkt-card .btn{width:100%;min-height:36px;margin-top:auto;font-size:9.5px}
+.mkt-card .btn svg{width:13px}
+.mkt-checkout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,.85fr);gap:14px;align-items:start}
+.mkt-lines{padding:4px 18px}
+.mkt-lines .client-cart-line{padding:11px 0}
+.mkt-lines-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 18px;border-top:1px solid var(--line);background:var(--surface-2)}
+.mkt-lines-foot span{color:var(--muted);font-size:9.5px}
+.mkt-lines-foot b{color:var(--ink);font-size:12px}
+.mkt-orders{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding:16px 18px}
+.mkt-orders .vendor-empty{grid-column:1/-1}
+html[data-theme="dark"] .adp-metrics article,html[data-theme="dark"] .adp-order,html[data-theme="dark"] .mkt-panel,html[data-theme="dark"] .mkt-card,html[data-theme="dark"] .adp-paymode>button{background:rgba(14,31,49,.84);border-color:rgba(226,240,253,.09)}
+html[data-theme="dark"] .adp-checkout{background:rgba(13,29,47,.7);border-color:rgba(63,197,190,.18)}
+html[data-theme="dark"] .adp-checkout select{background:#11243a}
+html[data-theme="dark"] .adp-paymode>button.active{background:rgba(38,165,161,.14)}
+html[data-theme="dark"] .adp-hint,html[data-theme="dark"] .mkt-lines-foot{background:rgba(13,29,47,.7)}
+@media(max-width:900px){.mkt-checkout{grid-template-columns:1fr}}
+@media(max-width:760px){.mkt-grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}.mkt-orders{grid-template-columns:1fr;padding:12px}}
 </style>
 </head>
 <body>
@@ -2337,12 +2422,21 @@ html[data-theme="dark"] .assignment-thread li{background:rgba(255,255,255,.04)}
     { id: "CAR-002", name: "Жасур Ниязов", vehicle: "Damas · 01 B 214 CX", phone: "+998 93 415 88 12", initials: "ЖН" }
   ];
   var PORTAL_KEY = "nurfin.portal.session.v1";
+  var PORTAL_TITLES = {
+    buyer: "Интерфейс покупателя",
+    vendor: "Интерфейс поставщика",
+    courier: "Интерфейс перевозчика",
+    agent: "Интерфейс торгового агента",
+    market: "Маркетплейс дистрибьютора"
+  };
   var portal = null;
   var pinnedByUrl = false;
   function parseKind(value) {
     if (value === "buyer" || value === "client") return "buyer";
     if (value === "vendor" || value === "supplier") return "vendor";
     if (value === "courier" || value === "carrier" || value === "delivery") return "courier";
+    if (value === "agent" || value === "sales" || value === "sfa") return "agent";
+    if (value === "market" || value === "marketplace" || value === "shop") return "market";
     return null;
   }
   function read() {
@@ -2365,6 +2459,8 @@ html[data-theme="dark"] .assignment-thread li{background:rgba(255,255,255,.04)}
     if (/\/customer$/.test(p)) return "buyer";
     if (/\/distributer$/.test(p)) return "vendor";
     if (/\/deliver$/.test(p)) return "courier";
+    if (/\/agent$/.test(p)) return "agent";
+    if (/\/marketplace$/.test(p)) return "market";
     return null;
   }
   function isSimulationPage() {
@@ -2387,7 +2483,7 @@ html[data-theme="dark"] .assignment-thread li{background:rgba(255,255,255,.04)}
         id: requested ?? (existing?.kind === kind ? existing.id : ""),
         partner: partner2
       };
-      document.title = kind === "buyer" ? "Интерфейс покупателя" : kind === "vendor" ? "Интерфейс поставщика" : "Интерфейс перевозчика";
+      document.title = PORTAL_TITLES[kind] ?? "Демо-интерфейс";
       persist();
       return;
     }
@@ -2428,7 +2524,10 @@ html[data-theme="dark"] .assignment-thread li{background:rgba(255,255,255,.04)}
     return CARRIERS.find((item) => item.id === (id ?? portal?.id));
   }
   function partyActor() {
-    if (!portal?.id) return null;
+    if (!portal) return null;
+    if (portal.kind === "agent") return agentOutletId ? { id: agentOutletId, role: "P-CLIENT" } : null;
+    if (!portal.id) return null;
+    if (portal.kind === "market") return { id: portal.id, role: "P-CLIENT" };
     if (portal.kind === "buyer") return { id: portal.id, role: "P-CLIENT" };
     if (portal.kind === "vendor") return { id: portal.id, role: "P-SUPPLIER" };
     return { id: portal.id, role: "P-CARRIER" };
@@ -2470,6 +2569,12 @@ html[data-theme="dark"] .assignment-thread li{background:rgba(255,255,255,.04)}
     { sku: "FMC-2004", name: "Туалетная бумага, упаковка 12 рулонов", ikpu: "07001004001000000", category: "fmcg", supplier: "Bazar Optom Trade", supplierInn: "305222333", unitPrice: fromSum("42000"), permitted: true },
     { sku: "FMC-2005", name: "Средство для мытья посуды, 5 л", ikpu: "07001005001000000", category: "fmcg", supplier: "Bazar Optom Trade", supplierInn: "305222333", unitPrice: fromSum("38000"), permitted: true },
     { sku: "FMC-2006", name: "Энергетический напиток, ящик 24 шт", ikpu: "07001006001000000", category: "fmcg", supplier: "Bazar Optom Trade", supplierInn: "305222333", unitPrice: fromSum("216000"), permitted: false, restriction: "Тонизирующие напитки с высоким содержанием кофеина — ограниченная категория" },
+    { sku: "FMC-2007", name: "Кофе растворимый, банка 190 г, короб 12 шт", ikpu: "07001007001000000", category: "fmcg", supplier: "Global Trade Distribution", supplierInn: "305111222", unitPrice: fromSum("612000"), permitted: true },
+    { sku: "FMC-2008", name: "Макаронные изделия, 5 кг, короб 4 шт", ikpu: "07001008001000000", category: "fmcg", supplier: "Global Trade Distribution", supplierInn: "305111222", unitPrice: fromSum("184000"), permitted: true },
+    { sku: "FMC-2009", name: "Зубная паста 100 мл, короб 24 шт", ikpu: "07001009001000000", category: "fmcg", supplier: "Global Trade Distribution", supplierInn: "305111222", unitPrice: fromSum("396000"), permitted: true },
+    { sku: "FMC-2010", name: "Печенье сахарное, короб 6 кг", ikpu: "07001010001000000", category: "fmcg", supplier: "Bazar Optom Trade", supplierInn: "305222333", unitPrice: fromSum("158000"), permitted: true },
+    { sku: "FMC-2011", name: "Мороженое пломбир, короб 24 шт", ikpu: "07001011001000000", category: "fmcg", supplier: "Bazar Optom Trade", supplierInn: "305222333", unitPrice: fromSum("264000"), permitted: true },
+    { sku: "FMC-2012", name: "Чай чёрный листовой 250 г, короб 20 шт", ikpu: "07001012001000000", category: "fmcg", supplier: "Bazar Optom Trade", supplierInn: "305222333", unitPrice: fromSum("340000"), permitted: true },
     { sku: "AGR-3001", name: "Удобрение комплексное NPK, мешок 50 кг", ikpu: "01005001001000000", category: "agro", supplier: "AgroYer Ta'minot", supplierInn: "306111222", unitPrice: fromSum("620000"), permitted: true },
     { sku: "AGR-3002", name: "Семена пшеницы элитные, мешок 50 кг", ikpu: "01005002001000000", category: "agro", supplier: "AgroYer Ta'minot", supplierInn: "306111222", unitPrice: fromSum("780000"), permitted: true },
     { sku: "AGR-3003", name: "Плёнка тепличная армированная, рулон 100 м", ikpu: "01005003001000000", category: "agro", supplier: "AgroYer Ta'minot", supplierInn: "306111222", unitPrice: fromSum("1450000"), permitted: true },
@@ -3895,6 +4000,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
       ops = defaultState();
     }
     ops.modal = null;
+    ensureChannelPartners();
     syncAllCollections();
     saveOps();
   }
@@ -3980,6 +4086,31 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
       suppliers: ops.suppliers.filter((item) => item.status === "active").map((item) => ({ id: item.id, name: item.name, inn: item.inn, category: item.category }))
     };
   }
+  function channelPartner(code) {
+    return ops.partners.find((item) => item.code === code);
+  }
+  function ensureChannelPartners() {
+    const extra = [
+      { id: "PT-005", name: "Дистрибьютор · агентское приложение", code: "distributor_agent", mode: "SDK + webhook", sla: "99,5%", errorRate: 0.3, status: "active", apiKey: "pk_live_agent_9d41b2", channelLimit: 8e8, statusMapping: { CON_SIGNED: "ACTIVE", PAY_CLOSED: "COMPLETED", CON_CANCELLED: "REJECTED" } },
+      { id: "PT-006", name: "Дистрибьютор · B2B маркетплейс", code: "distributor_market", mode: "Checkout SDK + API", sla: "99,5%", errorRate: 0.5, status: "active", apiKey: "pk_live_market_3a70ce", channelLimit: 8e8, statusMapping: { CON_SIGNED: "ACTIVE", PAY_CLOSED: "COMPLETED", CON_CANCELLED: "REJECTED" } }
+    ];
+    let added = false;
+    extra.forEach((item) => {
+      if (!ops.partners.some((p) => p.code === item.code)) {
+        ops.partners.push(item);
+        added = true;
+      }
+    });
+    return added;
+  }
+  function channelApplications(code) {
+    const pt = channelPartner(code);
+    if (!pt) return [];
+    return ops.applications.filter((item) => item.partnerId === pt.id).map((item) => {
+      const c = ops.clients.find((entry) => entry.id === item.clientId);
+      return { id: item.id, clientId: item.clientId, clientName: c?.name ?? item.clientId, createdAt: item.createdAt, item: item.item, amount: item.amount, status: item.status, score: item.score, decision: item.decision, dealId: item.dealId, reasons: [...item.reasons] };
+    });
+  }
   function portfolioCapacity() {
     const capital = ops.policy.ownCapital ?? 0;
     const deals = getState().deals;
@@ -4017,20 +4148,21 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     const c = ops.clients.find((item) => item.id === input.clientId) ?? ops.clients[0];
     const first = input.items[0];
     const s = ops.suppliers.find((item) => item.inn === first.supplierInn) ?? ops.suppliers[0];
-    const pt = ops.partners.find((item) => item.code === "paynet_xolis") ?? ops.partners[0];
+    const pt = ops.partners.find((item) => item.code === (input.channelCode ?? "paynet_xolis")) ?? ops.partners.find((item) => item.code === "paynet_xolis") ?? ops.partners[0];
     const app = { id: `APP-2026-${String(++ops.seq).padStart(4, "0")}`, clientId: c.id, supplierId: s.id, partnerId: pt.id, productCode: input.productCode, item: input.items.map((item) => item.name).join(", "), amount: input.amount, createdAt: now2(), status: "draft", score: 0, decision: "MANUAL_REVIEW", reasons: [] };
     Object.assign(app, scoreApplication(app));
     app.status = app.decision === "DECLINE" ? "declined" : app.decision === "AUTO_APPROVE" ? "approved" : "review";
     ops.applications.unshift(app);
-    ops.integrations.unshift({ id: `INT-${++ops.seq}`, partner: pt.name, direction: "Входящее", event: "application.created.mobile", status: "success", at: now2(), attempts: 1, correlationId: `mobile-${ops.seq}` });
+    ops.integrations.unshift({ id: `INT-${++ops.seq}`, partner: pt.name, direction: "Входящее", event: input.eventName ?? "application.created.mobile", status: "success", at: now2(), attempts: 1, correlationId: `${input.eventPrefix ?? "mobile"}-${ops.seq}` });
     if (app.decision === "AUTO_APPROVE") {
       const deal = createNewDeal({ clientName: c.name, clientInn: c.inn, supplierName: s.name, supplierInn: s.inn, channel: pt.code, productCode: app.productCode, items: input.items.map((item) => ({ sku: item.sku, name: item.name, qty: item.qty, unitPrice: item.unitPrice })) });
       app.dealId = deal.id;
       app.status = "approved";
       c.exposure += app.amount;
-      ops.documents.push({ id: `DOC-${++ops.seq}`, dealId: deal.id, type: "Заявка", name: `Мобильная заявка ${app.id}`, status: "verified", updatedAt: now2(), reference: app.id });
+      ops.documents.push({ id: `DOC-${++ops.seq}`, dealId: deal.id, type: "Заявка", name: `${input.sourceLabel ?? "Мобильная заявка"} ${app.id}`, status: "verified", updatedAt: now2(), reference: app.id });
     }
-    changed(app.dealId ? `Мобильная заявка ${app.id} одобрена; создана сделка ${app.dealId}.` : `Мобильная заявка ${app.id} принята: ${decisionLabel(app.decision)}.`);
+    const srcLabel = input.sourceLabel ?? "Мобильная заявка";
+    changed(app.dealId ? `${srcLabel} ${app.id} одобрена; создана сделка ${app.dealId}.` : `${srcLabel} ${app.id} принята: ${decisionLabel(app.decision)}.`);
     return { applicationId: app.id, ...app.dealId ? { dealId: app.dealId } : {}, decision: app.decision };
   }
   function scoreApplication(app) {
@@ -6882,6 +7014,500 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     <aside class="vendor-rule"><i data-lucide="shield-check"></i><div><b>Ключевое правило Мурабахи</b><p>Счёт выставляется на Nur Finance, а товар передаётся его перевозчику. Условия рассрочки — между Nur Finance и покупателем; вас они не касаются.</p></div></aside>
   </div>`;
   }
+
+  // ==========================================================================
+  // Партнёрские адаптеры дистрибьютора (Трек A и Трек B).
+  // Трек A — «Интерфейс торгового агента»: финансирование встроено в
+  // агентское приложение дистрибьютора, решение принимается в поле.
+  // Трек B — «Маркетплейс дистрибьютора»: «Купить по Мурабахе» как способ
+  // оплаты в корзине B2B-маркетплейса.
+  // Оба адаптера подают заявки в тот же бэк-офис, что и остальные каналы:
+  // отдельного контура нет — только своя точка входа и свой партнёрский код.
+  // ==========================================================================
+  var DISTRIBUTOR_BRAND = "Дистрибьютор";
+  var AGENT_CHANNEL = "distributor_agent";
+  var MARKET_CHANNEL = "distributor_market";
+  var AGENTS = [
+    { id: "AGT-001", name: "Сардор Умаров", supplierId: "SUP-004", territory: "Ташкент · Чиланзар, Учтепа", phone: "+998 90 311 20 40" },
+    { id: "AGT-002", name: "Нигора Юсупова", supplierId: "SUP-005", territory: "Ташкент · Юнусабад, Мирзо-Улугбек", phone: "+998 93 415 77 12" },
+    { id: "AGT-003", name: "Ботир Эргашев", supplierId: "SUP-006", territory: "Самарканд · область", phone: "+998 97 220 65 08" }
+  ];
+  var AGENT_TABS = ["route", "order", "orders", "profile"];
+  var MARKET_TABS = ["catalog", "cart", "orders"];
+  var agentTab = "route";
+  var agentOutletId = "";
+  var agentBasket = [];
+  var agentPayMode = "murabaha";
+  var agentProductCode = "MRB-30";
+  var marketTab = "catalog";
+  var marketBasket = [];
+  var marketPayMode = "murabaha";
+  var marketProductCode = "MRB-30";
+  var marketCategory = "all";
+
+  function agentAccount(id) {
+    return AGENTS.find((item) => item.id === id);
+  }
+  function sessionAgent() {
+    const p = activePortal();
+    return p?.kind === "agent" ? agentAccount(p.id) : void 0;
+  }
+  function agentDistributor() {
+    const a = sessionAgent();
+    return a ? supplierById(a.supplierId) : void 0;
+  }
+  function sessionMarketClientId() {
+    const p = activePortal();
+    return p?.kind === "market" ? p.id : void 0;
+  }
+  function productBy(code) {
+    return PRODUCTS.find((item) => item.code === code) ?? PRODUCTS[0];
+  }
+  function termDays(code) {
+    const n = Number(String(code).split("-")[1]);
+    return Number.isFinite(n) ? n : 30;
+  }
+  function basketSum(rows) {
+    return rows.reduce((total, row) => total + row.item.unitPrice * BigInt(row.qty), 0n);
+  }
+  function markupFor(total, code) {
+    const p = productBy(code);
+    return total * BigInt(Math.round(p.markupRate * 1e4)) / 10000n;
+  }
+  function basketAdd(rows, item, code) {
+    const p = productBy(code);
+    const row = rows.find((entry) => entry.item.sku === item.sku);
+    if (row) {
+      row.qty += 10;
+      return rows;
+    }
+    const minimumQty = Math.max(10, Number((p.minAmount + item.unitPrice - 1n) / item.unitPrice));
+    rows.push({ item, qty: minimumQty });
+    return rows;
+  }
+  function catalogueEntries(filterFn) {
+    return CATALOGUE.map((item, index) => ({ item, index })).filter(({ item }) => filterFn(item));
+  }
+  function scheduleLines(total, code) {
+    const p = productBy(code);
+    const grand = total + markupFor(total, code);
+    const parts = allocate(grand, Array.from({ length: p.installments }, () => 1));
+    const start = /* @__PURE__ */ new Date();
+    const stepDays = Math.round(termDays(code) / p.installments);
+    return parts.map((amount, index) => {
+      const due = new Date(start.getTime() + stepDays * (index + 1) * 24 * 60 * 60 * 1e3);
+      return { no: index + 1, due: due.toLocaleDateString("ru-RU"), amount };
+    });
+  }
+  function checkoutSummary(total, code, availableSum) {
+    const markup = markupFor(total, code);
+    const grand = total + markup;
+    const p = productBy(code);
+    const requested = Number(total / 100n);
+    const min2 = Number(p.minAmount / 100n);
+    const max2 = Number(p.maxAmount / 100n);
+    const overLimit = requested > availableSum;
+    const outsideProduct = requested < min2 || requested > max2;
+    return { markup, grand, product: p, requested, overLimit, outsideProduct, blocked: overLimit || outsideProduct };
+  }
+  function checkoutBlockNote(summary) {
+    if (summary.overLimit) return `Сумма превышает доступный лимит покупателя. Уменьшите заказ или подайте заявку на пересмотр лимита.`;
+    if (summary.outsideProduct) return `Сумма вне границ продукта ${esc(summary.product.name)}: от ${sums(summary.product.minAmount)} до ${sums(summary.product.maxAmount)}.`;
+    return "";
+  }
+  function checkoutPanel(prefix, total, code, availableSum) {
+    const summary = checkoutSummary(total, code, availableSum);
+    const lines = scheduleLines(total, code);
+    return `<div class="adp-checkout">
+    <label>Условия Мурабахи<select id="${prefix}-product">${PRODUCTS.map((item) => `<option value="${item.code}" ${item.code === code ? "selected" : ""}>${esc(item.name)} · наценка ${(item.markupRate * 100).toFixed(1)}%</option>`).join("")}</select></label>
+    <dl class="adp-sum">
+      <div><dt>Себестоимость товара</dt><dd>${sums(total)}</dd></div>
+      <div><dt>Наценка Nur Finance</dt><dd>${sums(summary.markup)}</dd></div>
+      <div class="total"><dt>Итого к оплате покупателем</dt><dd>${sums(summary.grand)}</dd></div>
+    </dl>
+    <table class="adp-schedule"><thead><tr><th>№</th><th>Срок</th><th>Платёж</th></tr></thead><tbody>${lines.map((line) => `<tr><td>${line.no}</td><td>${esc(line.due)}</td><td>${sums(line.amount)}</td></tr>`).join("")}</tbody></table>
+    ${summary.blocked ? `<p class="adp-block"><i data-lucide="circle-alert"></i>${checkoutBlockNote(summary)}</p>` : `<p class="adp-ok"><i data-lucide="shield-check"></i>Лимит покупателя позволяет оформить заказ. Цена фиксируется на весь срок — доплат и процентов нет.</p>`}
+  </div>`;
+  }
+  function adapterApplicationCard(app, opts) {
+    const state3 = getState();
+    const deal = app.dealId ? state3.deals.find((item) => item.id === app.dealId) : void 0;
+    const tone = app.status === "approved" ? ["Одобрена", "ok"] : app.status === "review" ? ["На проверке", "warn"] : app.status === "declined" ? ["Отклонена", "danger"] : ["Черновик", "neutral"];
+    const stage = !deal ? "" : !deal.promise ? "Ожидает подписания wa'd покупателем" : deal.status.con === "CON_OFFER_SENT" ? "Оферта отправлена покупателю" : deal.status.con === "CON_ACCEPTED" ? "Оферта принята — нужен договор" : deal.status.dlv === "DLV_DELIVERED" ? "Доставлено — ожидает приёмки" : deal.status.pay === "PAY_CLOSED" ? "Сделка закрыта" : "В работе";
+    let action = "";
+    if (deal && opts.mode === "agent") {
+      if (!deal.promise) action = `<button class="btn btn-primary" data-act="portal:agent-wad:${esc(deal.id)}"><i data-lucide="smartphone"></i>Передать телефон покупателю</button>`;
+      else action = `<span class="adp-hint"><i data-lucide="info"></i>Следующий шаг покупатель делает в своём кабинете</span>`;
+    }
+    if (deal && opts.mode === "market") {
+      const next = !deal.promise ? ["promise", "Подписать wa'd"] : deal.status.con === "CON_OFFER_SENT" ? ["accept", "Принять оферту"] : deal.status.con === "CON_ACCEPTED" ? ["sign", "Подписать договор"] : deal.status.dlv === "DLV_DELIVERED" ? ["delivery-accept", "Принять товар"] : null;
+      if (next) action = `<button class="btn btn-primary" data-act="${clientTaskAct(esc(deal.id), next[0])}">${next[1]}</button>`;
+    }
+    return `<article class="adp-order">
+    <div class="adp-order-head"><span>${esc(app.id)}</span>${pill(tone[0], tone[1])}</div>
+    <h3>${esc(app.item)}</h3>
+    ${opts.showClient && app.clientName ? `<p>${esc(app.clientName)}</p>` : ""}
+    <div class="adp-order-meta"><span><i data-lucide="hand-coins"></i>${sums(fromSum(String(app.amount)))}</span><span><i data-lucide="gauge"></i>скоринг ${app.score}</span>${app.dealId ? `<span><i data-lucide="file-text"></i>${esc(app.dealId)}</span>` : ""}</div>
+    ${stage ? `<small>${esc(stage)}</small>` : ""}
+    ${action ? `<div class="adp-order-actions">${action}</div>` : ""}
+  </article>`;
+  }
+
+  // ---------- Трек A · интерфейс торгового агента ----------
+  function agentSignInView() {
+    return `<div class="client-app signin">
+    <section class="portal-signin">
+      <div class="portal-signin-mark"><i data-lucide="user-round"></i></div>
+      <h1>Интерфейс торгового агента</h1>
+      <p>Приложение агента ${esc(DISTRIBUTOR_BRAND)} с встроенным финансированием Nur Finance. Выберите агента.</p>
+      <div class="portal-account-list">${AGENTS.map((item) => {
+      const dist = supplierById(item.supplierId);
+      return `<button type="button" data-act="portal:signin:agent:${item.id}"><span>${esc(initials(item.name))}</span><div><b>${esc(item.name)}</b><small>${esc(dist?.name ?? DISTRIBUTOR_BRAND)} · ${esc(item.territory)}</small></div><i data-lucide="arrow-right"></i></button>`;
+    }).join("")}</div>
+      <p class="portal-legal">Демонстрационная среда. Данные хранятся только в этом браузере.</p>
+    </section>
+  </div>`;
+  }
+  function agentNav() {
+    const entries = [
+      ["route", "route", "Маршрут"],
+      ["order", "shopping-bag", "Заказ"],
+      ["orders", "clipboard-list", "Заявки"],
+      ["profile", "user-round", "Профиль"]
+    ];
+    return `<nav class="client-bottom-nav nav-4">${entries.map(([id, icon, label]) => `<button type="button" class="${agentTab === id ? "active" : ""}" data-act="portal:agent-tab:${id}"><i data-lucide="${icon}"></i><span>${label}</span></button>`).join("")}</nav>`;
+  }
+  function agentRouteScreen() {
+    const me = sessionAgent();
+    const dist = agentDistributor();
+    const outlets = portalAccounts().clients;
+    const apps = channelApplications(AGENT_CHANNEL).filter((item) => item.reasons !== void 0);
+    const financed = apps.filter((item) => item.status === "approved");
+    const volume = financed.reduce((total, item) => total + item.amount, 0);
+    return `<section class="client-screen">
+    <header class="client-greeting"><div><span>${esc(dist?.name ?? DISTRIBUTOR_BRAND)}</span><h1>${esc(me?.name ?? "Агент")}</h1></div><div class="client-avatar">${esc(initials(me?.name ?? "Агент"))}</div></header>
+    <article class="client-limit-card"><span>Профинансировано через агента</span><strong>${sums(fromSum(String(volume)))}</strong><div><small>${esc(me?.territory ?? "")}</small>${pill(`${financed.length} заказов`, "accent")}</div></article>
+    <div class="adp-metrics"><article><i data-lucide="building-2"></i><div><span>Точек на маршруте</span><strong>${outlets.length}</strong></div></article><article><i data-lucide="clipboard-list"></i><div><span>Заявок подано</span><strong>${apps.length}</strong></div></article></div>
+    <div class="client-section-title"><div><h2>Точки маршрута</h2><p>Лимит Nur Finance виден до оформления заказа</p></div><i data-lucide="route"></i></div>
+    <div class="client-list">${outlets.map((outlet) => {
+      const snapshot = clientPortalSnapshot(outlet.id);
+      const available = snapshot.client.available;
+      const ready = available > 0;
+      return `<article class="client-list-card adp-outlet">
+        <div><span>${esc(outlet.inn)}</span>${pill(ready ? "Мурабаха доступна" : "Лимит исчерпан", ready ? "ok" : "warn")}</div>
+        <h3>${esc(outlet.name)}</h3>
+        <p>Доступно ${sums(fromSum(String(available)))} · лимит ${sums(fromSum(String(snapshot.client.limit)))} · риск ${esc(outlet.risk)}</p>
+        <div class="client-card-actions"><button class="btn btn-primary client-card-action" data-act="portal:agent-outlet:${esc(outlet.id)}">Оформить заказ</button></div>
+      </article>`;
+    }).join("")}</div>
+  </section>`;
+  }
+  function agentOrderScreen() {
+    const dist = agentDistributor();
+    if (!agentOutletId) {
+      return `<section class="client-screen"><header class="client-page-title"><button data-act="portal:agent-tab:route"><i data-lucide="arrow-left"></i></button><div><h1>Заказ</h1><p>Сначала выберите точку</p></div></header><div class="client-empty"><i data-lucide="building-2"></i><b>Точка не выбрана</b><span>Откройте маршрут и выберите торговую точку</span></div></section>`;
+    }
+    const snapshot = clientPortalSnapshot(agentOutletId);
+    const available = snapshot.client.available;
+    const total = basketSum(agentBasket);
+    const rows = catalogueEntries((item) => item.supplierInn === (dist?.inn ?? ""));
+    return `<section class="client-screen">
+    <header class="client-page-title"><button data-act="portal:agent-tab:route"><i data-lucide="arrow-left"></i></button><div><h1>${esc(snapshot.client.name)}</h1><p>ИНН ${esc(snapshot.client.inn)} · доступно ${sums(fromSum(String(available)))}</p></div><span class="client-cart-count">${agentBasket.reduce((n, row) => n + row.qty, 0)}</span></header>
+    <div class="client-section-title"><div><h2>Каталог ${esc(dist?.name ?? DISTRIBUTOR_BRAND)}</h2><p>Только собственный ассортимент дистрибьютора</p></div><i data-lucide="boxes"></i></div>
+    <div class="client-products">${rows.map(({ item, index }) => `<article class="client-product ${item.permitted ? "" : "blocked"}"><div class="client-product-icon"><i data-lucide="package"></i></div><div><small>${esc(item.sku)}</small><h3>${esc(item.name)}</h3><p>ИКПУ ${esc(item.ikpu)}</p>${item.restriction ? `<em>${esc(item.restriction)}</em>` : ""}<strong>${money(item.unitPrice)} сум</strong></div><button ${item.permitted ? "" : "disabled"} data-act="portal:agent-add:${index}"><i data-lucide="plus"></i></button></article>`).join("") || `<div class="client-empty"><i data-lucide="package"></i><b>У дистрибьютора нет позиций в демо-каталоге</b></div>`}</div>
+    <section class="client-cart">
+      <div class="client-section-title"><div><h2>Заказ</h2><p>${agentBasket.length ? `${agentBasket.length} позиций` : "Добавьте товары"}</p></div>${agentBasket.length ? `<button data-act="portal:agent-clear">Очистить</button>` : ""}</div>
+      ${agentBasket.map((row, index) => `<div class="client-cart-line"><div><b>${esc(row.item.name)}</b><span>${row.qty} × ${money(row.item.unitPrice)} сум</span></div><strong>${money(row.item.unitPrice * BigInt(row.qty))} сум</strong><button data-act="portal:agent-remove:${index}"><i data-lucide="x"></i></button></div>`).join("")}
+      ${agentBasket.length ? `
+      <div class="adp-paymode">
+        <button type="button" class="${agentPayMode === "prepay" ? "active" : ""}" data-act="portal:agent-pay:prepay"><i data-lucide="wallet-cards"></i><span><b>Оплата при поставке</b><small>Как сегодня — из своих средств</small></span></button>
+        <button type="button" class="${agentPayMode === "murabaha" ? "active" : ""}" data-act="portal:agent-pay:murabaha"><i data-lucide="hand-coins"></i><span><b>Мурабаха от Nur Finance</b><small>Товар сейчас, оплата по графику</small></span></button>
+      </div>
+      ${agentPayMode === "murabaha" ? checkoutPanel("agent", total, agentProductCode, available) : `<p class="client-legal-note">Обычный заказ: точка платит дистрибьютору сама. Финансирование не подключается.</p>`}
+      <button class="btn btn-primary client-full-btn" data-act="portal:agent-submit">${agentPayMode === "murabaha" ? "Отправить заявку в Nur Finance" : "Оформить обычный заказ"}</button>
+      ${agentPayMode === "murabaha" ? `<p class="client-legal-note">Решение приходит в приложение агента за секунды. Обещание купить (wa'd) покупатель подписывает сам — без этого закупка не начинается.</p>` : ""}` : ""}
+    </section>
+  </section>`;
+  }
+  function agentOrdersScreen() {
+    const apps = channelApplications(AGENT_CHANNEL);
+    return `<section class="client-screen"><header class="client-page-title"><div><h1>Заявки агента</h1><p>Канал «${esc(DISTRIBUTOR_BRAND)} · агентское приложение»</p></div></header>
+    <div class="client-list">${apps.map((app) => adapterApplicationCard(app, { mode: "agent", showClient: true })).join("") || `<div class="client-empty"><i data-lucide="clipboard-list"></i><b>Заявок пока нет</b><span>Оформите первый заказ с Мурабахой</span></div>`}</div>
+  </section>`;
+  }
+  function agentProfileScreen() {
+    const me = sessionAgent();
+    const dist = agentDistributor();
+    return `<section class="client-screen"><header class="client-page-title"><div><h1>Профиль</h1><p>Данные агента</p></div></header>
+    <article class="client-profile-card"><div class="client-avatar large">${esc(initials(me?.name ?? "Агент"))}</div><h2>${esc(me?.name ?? "")}</h2><span>${esc(dist?.name ?? DISTRIBUTOR_BRAND)}</span></article>
+    <dl class="client-profile-list"><div><dt>Территория</dt><dd>${esc(me?.territory ?? "")}</dd></div><div><dt>Телефон</dt><dd>${esc(me?.phone ?? "")}</dd></div><div><dt>Канал</dt><dd>distributor_agent</dd></div><div><dt>Поддержка Nur Finance</dt><dd>+998 71 200 20 20</dd></div></dl>
+    <div class="client-demo-note"><i data-lucide="info"></i><p>Финансирование встроено в приложение агента: отдельного входа в банк нет, решение возвращается в тот же экран.</p></div>
+    <button class="btn client-full-btn" data-act="portal:signout"><i data-lucide="log-out"></i>Выйти</button>
+  </section>`;
+  }
+  function agentPortalView() {
+    const me = sessionAgent();
+    const p = activePortal();
+    if (p?.kind === "agent" && p.id && !me) {
+      return `<div class="client-app"><section class="portal-signin"><div class="portal-signin-mark"><i data-lucide="circle-alert"></i></div><h1>Учётная запись недоступна</h1><p>Агент ${esc(p.id)} не найден.</p><button class="btn btn-primary" data-act="portal:signout">Выбрать другого агента</button></section></div>`;
+    }
+    const content = agentTab === "route" ? agentRouteScreen() : agentTab === "order" ? agentOrderScreen() : agentTab === "orders" ? agentOrdersScreen() : agentProfileScreen();
+    return `<div class="client-app">${content}${agentNav()}</div>`;
+  }
+
+  // ---------- Трек B · B2B-маркетплейс дистрибьютора ----------
+  function marketSignInView() {
+    const { clients } = portalAccounts();
+    return `<div class="market-workspace signin">
+    <section class="portal-signin">
+      <div class="portal-signin-mark"><i data-lucide="shopping-bag"></i></div>
+      <h1>Маркетплейс ${esc(DISTRIBUTOR_BRAND)}</h1>
+      <p>B2B-маркетплейс с встроенной оплатой по Мурабахе. Войдите как торговая точка.</p>
+      <div class="portal-account-list">${clients.map((item) => `<button type="button" data-act="portal:signin:market:${item.id}"><span>${esc(initials(item.name))}</span><div><b>${esc(item.name)}</b><small>ИНН ${esc(item.inn)} · риск ${esc(item.risk)}</small></div><i data-lucide="arrow-right"></i></button>`).join("")}</div>
+      <p class="portal-legal">Демонстрационная среда. Данные хранятся только в этом браузере.</p>
+    </section>
+  </div>`;
+  }
+  function marketCatalogTab() {
+    const rows = catalogueEntries((item) => marketCategory === "all" || item.category === marketCategory);
+    return `<section class="mkt-catalog">
+    <nav class="client-category-tabs"><button type="button" class="${marketCategory === "all" ? "active" : ""}" data-act="portal:market-cat:all">Все категории</button>${CATALOGUE_CATEGORIES.map((cat) => `<button type="button" class="${marketCategory === cat.key ? "active" : ""}" data-act="portal:market-cat:${cat.key}"><i data-lucide="${cat.icon}"></i>${esc(cat.label)}</button>`).join("")}</nav>
+    <div class="mkt-grid">${rows.map(({ item, index }) => `<article class="mkt-card ${item.permitted ? "" : "blocked"}">
+      <div class="mkt-card-icon"><i data-lucide="package"></i></div>
+      <small>${esc(item.supplier)}</small>
+      <h3>${esc(item.name)}</h3>
+      <p>${esc(item.sku)} · ИКПУ ${esc(item.ikpu)}</p>
+      ${item.restriction ? `<em>${esc(item.restriction)}</em>` : ""}
+      <strong>${money(item.unitPrice)} сум</strong>
+      <button class="btn ${item.permitted ? "btn-primary" : ""}" ${item.permitted ? "" : "disabled"} data-act="portal:market-add:${index}"><i data-lucide="plus"></i>${item.permitted ? "В корзину" : "Недоступно"}</button>
+    </article>`).join("")}</div>
+  </section>`;
+  }
+  function marketCartTab() {
+    const clientId = sessionMarketClientId();
+    const snapshot = clientPortalSnapshot(clientId);
+    const available = snapshot.client.available;
+    const total = basketSum(marketBasket);
+    if (!marketBasket.length) {
+      return `<section class="mkt-panel"><div class="vendor-empty"><i data-lucide="shopping-bag"></i><h3>Корзина пуста</h3><p>Добавьте товары из каталога — оплату по Мурабахе можно выбрать на этом же шаге</p></div></section>`;
+    }
+    return `<section class="mkt-checkout">
+    <div class="mkt-panel">
+      <div class="vendor-queue-head"><div><h2>Корзина</h2><p>${marketBasket.length} позиций · один поставщик на заявку</p></div>${pill("Демо-среда", "accent")}</div>
+      <div class="mkt-lines">${marketBasket.map((row, index) => `<div class="client-cart-line"><div><b>${esc(row.item.name)}</b><span>${esc(row.item.supplier)} · ${row.qty} × ${money(row.item.unitPrice)} сум</span></div><strong>${money(row.item.unitPrice * BigInt(row.qty))} сум</strong><button data-act="portal:market-remove:${index}"><i data-lucide="x"></i></button></div>`).join("")}</div>
+      <div class="mkt-lines-foot"><button class="btn" data-act="portal:market-clear"><i data-lucide="trash-2"></i>Очистить корзину</button><span>Себестоимость <b>${sums(total)}</b></span></div>
+    </div>
+    <aside class="mkt-panel">
+      <div class="vendor-queue-head"><div><h2>Способ оплаты</h2><p>Оформление не покидает маркетплейс</p></div></div>
+      <div class="mkt-panel-body">
+        <div class="adp-paymode">
+          <button type="button" class="${marketPayMode === "prepay" ? "active" : ""}" data-act="portal:market-pay:prepay"><i data-lucide="wallet-cards"></i><span><b>Оплатить сейчас</b><small>Обычный заказ дистрибьютору</small></span></button>
+          <button type="button" class="${marketPayMode === "murabaha" ? "active" : ""}" data-act="portal:market-pay:murabaha"><i data-lucide="hand-coins"></i><span><b>Купить по Мурабахе</b><small>Товар сейчас, оплата по графику</small></span></button>
+        </div>
+        ${marketPayMode === "murabaha" ? `<p class="adp-limit">Доступный лимит Nur Finance: <b>${sums(fromSum(String(available)))}</b></p>${checkoutPanel("market", total, marketProductCode, available)}` : `<p class="client-legal-note">Обычный заказ: оплата дистрибьютору по вашим текущим условиям.</p>`}
+        <button class="btn btn-primary client-full-btn" data-act="portal:market-submit">${marketPayMode === "murabaha" ? "Оформить с Мурабахой" : "Оформить заказ"}</button>
+        ${marketPayMode === "murabaha" ? `<p class="client-legal-note">После одобрения вы подписываете обещание купить (wa'd) здесь же. Закупка не начинается без вашего согласия, а цена фиксируется на весь срок.</p>` : ""}
+      </div>
+    </aside>
+  </section>`;
+  }
+  function marketOrdersTab() {
+    const clientId = sessionMarketClientId();
+    const apps = channelApplications(MARKET_CHANNEL).filter((item) => item.clientId === clientId);
+    return `<section class="mkt-panel">
+    <div class="vendor-queue-head"><div><h2>Мои заказы с финансированием</h2><p>${apps.length} записей · статусы приходят из Nur Finance</p></div>${pill("Канал маркетплейса", "accent")}</div>
+    <div class="mkt-orders">${apps.map((app) => adapterApplicationCard(app, { mode: "market", showClient: false })).join("") || `<div class="vendor-empty"><i data-lucide="clipboard-list"></i><h3>Заказов с Мурабахой пока нет</h3><p>Выберите товары и на шаге оплаты нажмите «Купить по Мурабахе»</p></div>`}</div>
+  </section>`;
+  }
+  function marketPortalView() {
+    const clientId = sessionMarketClientId();
+    if (clientId && !clientAccountExists(clientId)) {
+      return `<div class="market-workspace"><section class="portal-signin"><div class="portal-signin-mark"><i data-lucide="circle-alert"></i></div><h1>Учётная запись недоступна</h1><p>Организация ${esc(clientId)} больше не обслуживается.</p><button class="btn btn-primary" data-act="portal:signout">Выбрать другую организацию</button></section></div>`;
+    }
+    const snapshot = clientPortalSnapshot(clientId);
+    const cartCount = marketBasket.reduce((n, row) => n + row.qty, 0);
+    const tabs = [["catalog", "shopping-bag", "Каталог"], ["cart", "wallet-cards", `Корзина${cartCount ? ` · ${cartCount}` : ""}`], ["orders", "clipboard-list", "Мои заказы"]];
+    const content = marketTab === "catalog" ? marketCatalogTab() : marketTab === "cart" ? marketCartTab() : marketOrdersTab();
+    return `<div class="market-workspace">
+    <section class="vendor-hero"><div><span>Маркетплейс ${esc(DISTRIBUTOR_BRAND)}</span><h1>${esc(snapshot.client.name)}</h1><p>ИНН ${esc(snapshot.client.inn)} · доступный лимит ${sums(fromSum(String(snapshot.client.available)))}</p></div><button type="button" class="btn portal-signout" data-act="portal:signout"><i data-lucide="log-out"></i>Выйти</button></section>
+    <nav class="vendor-tabs">${tabs.map(([id, icon, label]) => `<button class="${marketTab === id ? "active" : ""}" data-act="portal:market-tab:${id}"><i data-lucide="${icon}"></i>${label}</button>`).join("")}</nav>
+    ${content}
+    <aside class="vendor-rule"><i data-lucide="shield-check"></i><div><b>Встроенное финансирование, а не переход в банк</b><p>«Купить по Мурабахе» — способ оплаты внутри маркетплейса. Заявка, решение, wa'd и договор проходят здесь же; дистрибьютор получает оплату при отгрузке.</p></div></aside>
+  </div>`;
+  }
+
+  // ---------- общий обработчик действий адаптеров ----------
+  function handleAdapterAction(action) {
+    const [, verb, value] = action.split(":");
+    if (verb === "agent-tab" && AGENT_TABS.includes(value)) {
+      agentTab = value;
+      update(() => {
+      });
+      return true;
+    }
+    if (verb === "agent-outlet" && value) {
+      agentOutletId = value;
+      agentBasket = [];
+      agentTab = "order";
+      update((s) => {
+        s.notice = null;
+      });
+      return true;
+    }
+    if (verb === "agent-add") {
+      const item = CATALOGUE[Number(value)];
+      if (!item) return true;
+      if (!item.permitted) {
+        notify("error", `BR-014: «${item.name}» — ${item.restriction ?? "запрещённая категория"}. Такой товар не может быть предметом мурабахи.`);
+        return true;
+      }
+      if (agentBasket.length && agentBasket[0].item.supplierInn !== item.supplierInn) {
+        notify("error", "В одной заявке можно выбрать товары только одного поставщика.");
+        return true;
+      }
+      basketAdd(agentBasket, item, agentProductCode);
+      update(() => {
+      });
+      return true;
+    }
+    if (verb === "agent-remove") {
+      agentBasket.splice(Number(value), 1);
+      update(() => {
+      });
+      return true;
+    }
+    if (verb === "agent-clear") {
+      agentBasket = [];
+      update(() => {
+      });
+      return true;
+    }
+    if (verb === "agent-pay" && (value === "prepay" || value === "murabaha")) {
+      agentPayMode = value;
+      update(() => {
+      });
+      return true;
+    }
+    if (verb === "agent-wad" && value) {
+      const deal = getState().deals.find((item) => item.id === value);
+      if (deal) agentOutletId = clientIdByInn(deal.clientInn) ?? agentOutletId;
+      handleOpsAction(`ops:client-wad:open:${value}`);
+      return true;
+    }
+    if (verb === "agent-submit") {
+      const total = basketSum(agentBasket);
+      if (!agentBasket.length || total <= 0n) return true;
+      if (agentPayMode !== "murabaha") {
+        agentBasket = [];
+        notify("ok", "Обычный заказ оформлен в системе дистрибьютора. Финансирование не подключалось.");
+        update(() => {
+        });
+        return true;
+      }
+      const available = clientPortalSnapshot(agentOutletId).client.available;
+      const summary = checkoutSummary(total, agentProductCode, available);
+      if (summary.blocked) {
+        notify("error", checkoutBlockNote(summary).replace(/<[^>]*>/g, ""));
+        return true;
+      }
+      const result = submitClientPortalApplication({
+        productCode: agentProductCode,
+        amount: Number(total / 100n),
+        clientId: agentOutletId,
+        channelCode: AGENT_CHANNEL,
+        eventName: "application.created.agent_app",
+        eventPrefix: "agent",
+        sourceLabel: "Заявка из агентского приложения",
+        items: agentBasket.map((row) => ({ sku: row.item.sku, name: row.item.name, qty: row.qty, unitPrice: row.item.unitPrice, supplierInn: row.item.supplierInn }))
+      });
+      agentBasket = [];
+      agentTab = "orders";
+      notify("ok", result.dealId ? `Заявка ${result.applicationId} одобрена прямо в поле. Передайте телефон покупателю для подписания wa'd.` : `Заявка ${result.applicationId} передана на проверку в Nur Finance.`);
+      return true;
+    }
+    if (verb === "market-tab" && MARKET_TABS.includes(value)) {
+      marketTab = value;
+      update(() => {
+      });
+      return true;
+    }
+    if (verb === "market-cat" && (value === "all" || CATALOGUE_CATEGORIES.some((cat) => cat.key === value))) {
+      marketCategory = value;
+      update(() => {
+      });
+      return true;
+    }
+    if (verb === "market-add") {
+      const item = CATALOGUE[Number(value)];
+      if (!item) return true;
+      if (!item.permitted) {
+        notify("error", `BR-014: «${item.name}» — ${item.restriction ?? "запрещённая категория"}. Такой товар не может быть предметом мурабахи.`);
+        return true;
+      }
+      if (marketBasket.length && marketBasket[0].item.supplierInn !== item.supplierInn) {
+        notify("error", "В одной заявке можно выбрать товары только одного поставщика.");
+        return true;
+      }
+      basketAdd(marketBasket, item, marketProductCode);
+      marketTab = "cart";
+      update(() => {
+      });
+      return true;
+    }
+    if (verb === "market-remove") {
+      marketBasket.splice(Number(value), 1);
+      update(() => {
+      });
+      return true;
+    }
+    if (verb === "market-clear") {
+      marketBasket = [];
+      update(() => {
+      });
+      return true;
+    }
+    if (verb === "market-pay" && (value === "prepay" || value === "murabaha")) {
+      marketPayMode = value;
+      update(() => {
+      });
+      return true;
+    }
+    if (verb === "market-submit") {
+      const total = basketSum(marketBasket);
+      if (!marketBasket.length || total <= 0n) return true;
+      const clientId = sessionMarketClientId();
+      if (marketPayMode !== "murabaha") {
+        marketBasket = [];
+        marketTab = "catalog";
+        notify("ok", "Заказ оформлен с оплатой напрямую дистрибьютору.");
+        update(() => {
+        });
+        return true;
+      }
+      const available = clientPortalSnapshot(clientId).client.available;
+      const summary = checkoutSummary(total, marketProductCode, available);
+      if (summary.blocked) {
+        notify("error", checkoutBlockNote(summary).replace(/<[^>]*>/g, ""));
+        return true;
+      }
+      const result = submitClientPortalApplication({
+        productCode: marketProductCode,
+        amount: Number(total / 100n),
+        clientId,
+        channelCode: MARKET_CHANNEL,
+        eventName: "application.created.marketplace",
+        eventPrefix: "market",
+        sourceLabel: "Заявка из маркетплейса",
+        items: marketBasket.map((row) => ({ sku: row.item.sku, name: row.item.name, qty: row.qty, unitPrice: row.item.unitPrice, supplierInn: row.item.supplierInn }))
+      });
+      marketBasket = [];
+      marketTab = "orders";
+      notify("ok", result.dealId ? `Заявка ${result.applicationId} одобрена. Подпишите wa'd — и мы выкупим товар у дистрибьютора.` : `Заявка ${result.applicationId} передана на проверку в Nur Finance.`);
+      return true;
+    }
+    return false;
+  }
+
   function handlePortalAction(action) {
     if (!action.startsWith("portal:")) return false;
     syncOpsFromStorage();
@@ -6890,6 +7516,11 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
       signInPortal(value, extra);
       clientTab = "home";
       vendorTab = "orders";
+      agentTab = "route";
+      agentOutletId = "";
+      agentBasket = [];
+      marketTab = "catalog";
+      marketBasket = [];
       update((state3) => {
         state3.notice = null;
       });
@@ -6902,6 +7533,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
       });
       return true;
     }
+    if (handleAdapterAction(action)) return true;
     if (verb === "carrier-tab" && value) {
       setCarrierTab(value);
       update(() => {
@@ -6958,6 +7590,18 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     return true;
   }
   function handlePortalChange(target) {
+    if (target.id === "agent-product") {
+      agentProductCode = target.value;
+      update(() => {
+      });
+      return true;
+    }
+    if (target.id === "market-product") {
+      marketProductCode = target.value;
+      update(() => {
+      });
+      return true;
+    }
     if (target.id === "client-product") {
       productCode = target.value;
       update(() => {
@@ -6982,7 +7626,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
   ];
   var ACCESS = {
     "R-01": "all",
-    "R-02": ["dashboard", "applications", "deals", "deal", "shariah", "payments", "counterparties", "documents", "exceptions", "reports", "notifications", "partner_intake", "client", "supplier", "carrier", "migration", "audit"],
+    "R-02": ["dashboard", "applications", "deals", "deal", "shariah", "payments", "counterparties", "documents", "exceptions", "reports", "notifications", "partner_intake", "client", "supplier", "carrier", "agent", "market", "migration", "audit"],
     "R-03": ["dashboard", "deals", "deal", "payments", "collections", "documents", "exceptions", "reports", "accounting", "migration", "audit"],
     "R-04": ["dashboard", "deals", "deal", "payments", "documents", "exceptions", "reports", "accounting", "migration", "audit"],
     "R-05": ["dashboard", "deals", "deal", "shariah", "documents", "exceptions", "reports", "products", "audit"],
@@ -7288,6 +7932,8 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     { id: "client", label: "Интерфейс покупателя", group: "Демо-интерфейсы", icon: "smartphone" },
     { id: "supplier", label: "Интерфейс поставщика", group: "Демо-интерфейсы", icon: "store" },
     { id: "carrier", label: "Интерфейс перевозчика", group: "Демо-интерфейсы", icon: "truck" },
+    { id: "agent", label: "Интерфейс торгового агента", group: "Демо-интерфейсы", icon: "user-round" },
+    { id: "market", label: "Маркетплейс дистрибьютора", group: "Демо-интерфейсы", icon: "shopping-bag" },
     { id: "migration", label: "Миграция в банк", group: "Демо-интерфейсы", icon: "landmark" }
   ];
   var TITLES = {
@@ -7311,6 +7957,8 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     client: "Интерфейс покупателя",
     supplier: "Интерфейс поставщика",
     carrier: "Интерфейс перевозчика",
+    agent: "Интерфейс торгового агента",
+    market: "Маркетплейс дистрибьютора",
     migration: "Готовность к миграции в банк",
     audit: "Аудит-след",
     notifications: "Каталог уведомлений"
@@ -7336,6 +7984,8 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     client: "Демонстрация клиентского пути от корзины до заявки.",
     supplier: "Счета, подтверждение передачи и статус поставки.",
     carrier: "Забор товара у поставщика, доставка клиенту и возвраты.",
+    agent: "Трек A: финансирование внутри агентского приложения дистрибьютора.",
+    market: "Трек B: «Купить по Мурабахе» как способ оплаты в B2B-маркетплейсе.",
     migration: "Контроль готовности портфеля к банковской платформе.",
     audit: "Неизменяемая история действий и решений.",
     notifications: "Сценарии §16: приоритет, получатели и текущее срабатывание."
@@ -7354,7 +8004,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     document.documentElement.dataset.theme = theme;
     document.documentElement.style.colorScheme = theme;
   }
-  var DEMO_PORTAL_URLS = { client: "/customer", supplier: "/distributer", carrier: "/deliver" };
+  var DEMO_PORTAL_URLS = { client: "/customer", supplier: "/distributer", carrier: "/deliver", agent: "/agent", market: "/marketplace" };
   function demoPortalPrefix() {
     const m = window.location.pathname.match(/^(.*\/nurfin_demo)(\/|$)/);
     return m ? m[1] : "";
@@ -7457,6 +8107,10 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
         return vendorPortalView();
       case "carrier":
         return carrierPortalView();
+      case "agent":
+        return agentPortalView();
+      case "market":
+        return marketPortalView();
       case "migration":
         return migrationView();
       case "notifications":
@@ -7477,16 +8131,19 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
   var PORTAL_META = {
     buyer: { view: "client", shell: "client-shell", label: "Интерфейс покупателя" },
     vendor: { view: "supplier", shell: "vendor-shell", label: "Интерфейс поставщика" },
-    courier: { view: "carrier", shell: "courier-shell", label: "Интерфейс перевозчика" }
+    courier: { view: "carrier", shell: "courier-shell", label: "Интерфейс перевозчика" },
+    agent: { view: "agent", shell: "client-shell", label: "Интерфейс торгового агента" },
+    market: { view: "market", shell: "vendor-shell", label: "Маркетплейс дистрибьютора" }
   };
   function renderPortal(root, kind) {
     const meta = PORTAL_META[kind];
     document.body.classList.remove("auth-page");
     document.body.classList.add("portal-page", "standalone-portal");
-    document.body.classList.toggle("client-portal-page", kind === "buyer");
-    document.body.classList.toggle("vendor-portal-page", kind === "vendor");
+    document.body.classList.toggle("client-portal-page", kind === "buyer" || kind === "agent");
+    document.body.classList.toggle("vendor-portal-page", kind === "vendor" || kind === "market");
     document.body.classList.toggle("courier-portal-page", kind === "courier");
-    const content = !isPortalSignedIn() ? kind === "buyer" ? clientSignInView() : kind === "vendor" ? vendorSignInView() : carrierSignInView() : kind === "buyer" ? clientPortalView() : kind === "vendor" ? vendorPortalView() : carrierPortalView();
+    const signedIn = isPortalSignedIn();
+    const content = !signedIn ? kind === "buyer" ? clientSignInView() : kind === "vendor" ? vendorSignInView() : kind === "agent" ? agentSignInView() : kind === "market" ? marketSignInView() : carrierSignInView() : kind === "buyer" ? clientPortalView() : kind === "vendor" ? vendorPortalView() : kind === "agent" ? agentPortalView() : kind === "market" ? marketPortalView() : carrierPortalView();
     root.innerHTML = `<div class="portal-shell ${meta.shell}">
     <header class="portal-topbar">
       <div class="portal-brand">${brandWordmark()}<span>${esc(meta.label)}</span></div>
@@ -7734,6 +8391,8 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
       { href: prefix + "/customer", label: "Интерфейс покупателя", icon: "smartphone" },
       { href: prefix + "/distributer", label: "Интерфейс поставщика", icon: "store" },
       { href: prefix + "/deliver", label: "Интерфейс перевозчика", icon: "truck" },
+      { href: prefix + "/agent", label: "Интерфейс торгового агента", icon: "user-round" },
+      { href: prefix + "/marketplace", label: "Маркетплейс дистрибьютора", icon: "shopping-bag" },
       { href: prefix + "/simulation", label: "Окно симуляции", icon: "route" }
     ];
   }
@@ -7866,17 +8525,19 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     }
     document.body.classList.remove("auth-page");
     const view = effectiveView();
-    if (view === "client" || view === "supplier" || view === "carrier") {
+    if (view === "client" || view === "supplier" || view === "carrier" || view === "agent" || view === "market") {
+      const embeddedLabel = TITLES[view];
+      const embeddedShell = view === "client" || view === "agent" ? "client-shell" : view === "carrier" ? "courier-shell" : "vendor-shell";
       document.body.classList.add("portal-page");
-      document.body.classList.toggle("client-portal-page", view === "client");
-      document.body.classList.toggle("vendor-portal-page", view === "supplier");
+      document.body.classList.toggle("client-portal-page", view === "client" || view === "agent");
+      document.body.classList.toggle("vendor-portal-page", view === "supplier" || view === "market");
       document.body.classList.toggle("courier-portal-page", view === "carrier");
-      root.innerHTML = `<div class="portal-shell ${view === "client" ? "client-shell" : view === "carrier" ? "courier-shell" : "vendor-shell"}">
+      root.innerHTML = `<div class="portal-shell ${embeddedShell}">
       <header class="portal-topbar">
-        <div class="portal-brand">${brandWordmark()}<span>${view === "client" ? "Интерфейс покупателя" : view === "carrier" ? "Интерфейс перевозчика" : "Интерфейс поставщика"}</span></div>
+        <div class="portal-brand">${brandWordmark()}<span>${esc(embeddedLabel)}</span></div>
         <div class="portal-topbar-actions"><span class="environment-badge"><i></i> Демо-среда</span><button class="theme-toggle" type="button" data-act="theme-toggle"><i data-lucide="${theme === "dark" ? "sun" : "moon"}"></i></button><button class="btn portal-back" type="button" data-act="nav:dashboard"><i data-lucide="arrow-left"></i>Back Office</button></div>
       </header>
-      ${simulationSyncBanner(view === "client" ? "Интерфейс покупателя" : view === "carrier" ? "Интерфейс перевозчика" : "Интерфейс поставщика")}
+      ${simulationSyncBanner(embeddedLabel)}
       <main class="portal-content">${notice()}${body()}</main>
     </div>${operationsModal()}${prdModal()}`;
       hydrateIcons();
@@ -8262,6 +8923,8 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     if (kind === "buyer") return { hash: "#" + clientTab, key: "b:" + clientTab };
     if (kind === "vendor") return { hash: "#" + vendorTab, key: "v:" + vendorTab };
     if (kind === "courier") return { hash: "#" + tab, key: "c:" + tab };
+    if (kind === "agent") return { hash: "#" + agentTab, key: "a:" + agentTab + ":" + agentOutletId };
+    if (kind === "market") return { hash: "#" + marketTab, key: "m:" + marketTab };
     if (!isSignedIn()) return { hash: "", key: "auth" };
     const s = getState();
     const view = effectiveView();
@@ -8301,6 +8964,14 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     }
     if (kind === "courier") {
       if (CARRIER_TABS.includes(raw)) tab = raw;
+      return;
+    }
+    if (kind === "agent") {
+      if (AGENT_TABS.includes(raw)) agentTab = raw;
+      return;
+    }
+    if (kind === "market") {
+      if (MARKET_TABS.includes(raw)) marketTab = raw;
       return;
     }
     if (!isSignedIn()) return;
