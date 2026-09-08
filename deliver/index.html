@@ -384,7 +384,7 @@ html[data-theme="dark"] .assignment-thread li{background:rgba(255,255,255,.04)}
 .adp-metrics span{color:var(--faint);font-size:8px}
 .adp-metrics strong{font-size:15px;letter-spacing:-.02em}
 .adp-outlet .client-card-actions{margin-top:10px}
-.adp-outlet .client-card-action{width:100%;min-height:36px;font-size:9.5px}
+.adp-outlet .client-card-action{width:100%;min-height:36px;font-size:9.5px}.adp-outlet .adp-outlet-limits{font-size:12.5px;font-weight:650;color:var(--ink)}.adp-outlet .adp-outlet-limits b{font-size:14.5px;font-weight:800;color:var(--accent-dark)}
 .adp-paymode{display:grid;gap:8px;margin:12px 0}
 .adp-paymode>button{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
 .adp-paymode>button:hover{border-color:var(--accent)}
@@ -7196,7 +7196,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
       return `<article class="client-list-card adp-outlet">
         <div><span>${esc(outlet.inn)}</span>${pill(ready ? "Мурабаха доступна" : "Лимит исчерпан", ready ? "ok" : "warn")}</div>
         <h3>${esc(outlet.name)}</h3>
-        <p>Доступно ${sums(fromSum(String(available)))} · лимит ${sums(fromSum(String(snapshot.client.limit)))} · риск ${esc(outlet.risk)}</p>
+        <p class="adp-outlet-limits">Доступно <b>${sums(fromSum(String(available)))}</b> · лимит <b>${sums(fromSum(String(snapshot.client.limit)))}</b> · риск ${esc(outlet.risk)}</p>
         <div class="client-card-actions"><button class="btn btn-primary client-card-action" data-act="portal:agent-outlet:${esc(outlet.id)}">Оформить заказ</button></div>
       </article>`;
     }).join("")}</div>
