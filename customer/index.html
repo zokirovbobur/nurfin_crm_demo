@@ -6854,7 +6854,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
       history: ["Зачем хранится история рейсов", "Отметки забора и вручения — доказательства владения. По ним шариатский контролёр проверяет, что продажа состоялась в правильном порядке."]
     };
     const [ruleTitle, ruleText] = rules[tab];
-    const body2 = tab === "pickup" ? pickup.map(pickupCard).join("") || empty("package-check", "Заборов нет", "Новые рейсы появятся после оплаты поставщику") : tab === "transit" ? transit.map(transitCard).join("") || empty("truck", "Нет товара в пути", "Подтвердите забор, чтобы начать рейс") : tab === "returns" ? back.map(returnCard).join("") || empty("rotate-ccw", "Возвратов нет", "Здесь появятся отказы клиентов и претензии") : past.map(historyCard).join("") || empty("badge-check", "История пуста", "Завершённые рейсы будут здесь");
+    const body2 = tab === "pickup" ? pickup.map(pickupCard).join("") || empty("package-check", "Заборов нет", "Новые рейсы появятся сразу после согласия поставщика на продажу — не дожидаясь оплаты") : tab === "transit" ? transit.map(transitCard).join("") || empty("truck", "Нет товара в пути", "Подтвердите забор, чтобы начать рейс") : tab === "returns" ? back.map(returnCard).join("") || empty("rotate-ccw", "Возвратов нет", "Здесь появятся отказы клиентов и претензии") : past.map(historyCard).join("") || empty("badge-check", "История пуста", "Завершённые рейсы будут здесь");
     return `<div class="courier-app">
     <header class="courier-header">
       <div class="courier-driver"><span>${esc(me.initials)}</span><div><b>${esc(me.name)}</b><small>${esc(me.vehicle)}</small></div></div>
