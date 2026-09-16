@@ -739,7 +739,7 @@ html[data-theme="dark"] .adp-hint,html[data-theme="dark"] .mkt-lines-foot{backgr
         return commit(
           deal,
           {
-            promise: { registeredAt: ctx.now, documentId: command.documentId, binding: true },
+            promise: { registeredAt: ctx.now, documentId: command.documentId, binding: true, depositRate: command.depositRate ?? null },
             status: { app: "APP_READY" }
           },
           event(ctx, "TXN.PROMISE_REGISTERED", { documentId: command.documentId })
@@ -849,6 +849,11 @@ html[data-theme="dark"] .adp-hint,html[data-theme="dark"] .mkt-lines-foot{backgr
         if (payment.amount !== command.amount) {
           return fail("AMOUNT_MISMATCH", "Сумма платежа не равна сумме заявки");
         }
+        // Товар мог уже уехать к клиенту (owner-трек не ждёт оплату), поэтому владение
+        // может быть зарегистрировано раньше этого платежа. В таком случае не откатываем
+        // его статус назад, а просто довносим payment_confirmation в комплект доказательств.
+        const ownership = deal.ownership;
+        const ownershipPatch = ownership && !ownership.revokedAt && !ownership.evidence.includes("payment_confirmation") ? { ownership: { ...ownership, evidence: [...ownership.evidence, "payment_confirmation"] } } : {};
         return commit(
           deal,
           {
@@ -857,7 +862,8 @@ html[data-theme="dark"] .adp-hint,html[data-theme="dark"] .mkt-lines-foot{backgr
               confirmedAt: ctx.now,
               paymentOrderNumber: command.paymentOrderNumber
             },
-            status: { pur: "PUR_PAID", own: "OWN_AWAITING_EVIDENCE" }
+            status: { pur: "PUR_PAID", ...ownership ? {} : { own: "OWN_AWAITING_EVIDENCE" } },
+            ...ownershipPatch
           },
           event(ctx, "PAY.SUPPLIER_CONFIRMED", { paymentOrderNumber: command.paymentOrderNumber })
         );
@@ -1036,10 +1042,10 @@ html[data-theme="dark"] .adp-hint,html[data-theme="dark"] .mkt-lines-foot{backgr
         );
       }
       case "ASSIGN_CARRIER": {
-        if (!isPaymentSettled(deal)) {
+        if (!deal.supplierInvoice) {
           return fail(
-            "CARRIER_BEFORE_PAYMENT",
-            "Перевозчик не назначается до подтверждённой оплаты поставщику"
+            "CARRIER_BEFORE_SUPPLIER_CONSENT",
+            "Перевозчик не назначается до согласия поставщика на продажу товара. Оплата поставщику идёт отдельным, параллельным треком и не блокирует отгрузку."
           );
         }
         if (deal.delivery?.pickedUpAt) {
@@ -2592,8 +2598,8 @@ html[data-theme="dark"] .adp-hint,html[data-theme="dark"] .mkt-lines-foot{backgr
     { sku: "AUT-5005", name: "Масляный фильтр универсальный", ikpu: "09003005001000000", category: "auto", supplier: "Zap Chast Servis", supplierInn: "308222333", unitPrice: fromSum("48000"), permitted: true }
   ];
   var PRODUCTS = [
-    { code: "MRB-30", name: "Мурабаха 30 дней", markupRate: 0.025, installments: 1, minAmount: fromSum("1000000"), maxAmount: fromSum("50000000"), depositRate: 0.05 },
-    { code: "MRB-90", name: "Мурабаха 90 дней", markupRate: 0.07, installments: 3, minAmount: fromSum("2000000"), maxAmount: fromSum("120000000"), depositRate: 0.05 },
+    { code: "MRB-30", name: "Мурабаха 30 дней", markupRate: 0.025, installments: 1, minAmount: fromSum("1000000"), maxAmount: fromSum("50000000"), depositRate: 0.1 },
+    { code: "MRB-90", name: "Мурабаха 90 дней", markupRate: 0.07, installments: 3, minAmount: fromSum("2000000"), maxAmount: fromSum("120000000"), depositRate: 0.1 },
     { code: "MRB-180", name: "Мурабаха 180 дней", markupRate: 0.13, installments: 6, minAmount: fromSum("5000000"), maxAmount: fromSum("300000000"), depositRate: 0.1 }
   ];
   var state = emptyState();
@@ -3750,6 +3756,15 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
   var AUTOMATION_ACTOR = { id: "sys-auto", role: AUTOMATION_ROLE };
   function nextStep(deal, mode2) {
     if (mode2 === "off") return null;
+    if (deal.promise && deal.supplierInvoice && !deal.delivery) {
+      const carrier2 = CARRIERS[0];
+      if (carrier2) {
+        return {
+          command: { kind: "ASSIGN_CARRIER", carrierId: carrier2.id, pickupSlot: nextPickupSlot() },
+          reason: "поставщик дал согласие на продажу — накладная и передача перевозчику не ждут оплаты поставщику"
+        };
+      }
+    }
     if (deal.promise && deal.supplierInvoice && !deal.supplierPayment) {
       const capacity = portfolioCapacity();
       const requested = Number(deal.supplierInvoice.amount) / 100;
@@ -3787,14 +3802,6 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
           amount: payment.amount
         },
         reason: "демо-режим: исполнение платежа имитируется, в продуктиве — обратный вызов банка"
-      };
-    }
-    if (payment?.confirmedAt && !payment.reversedAt && !deal.delivery) {
-      const carrier2 = CARRIERS[0];
-      if (!carrier2) return null;
-      return {
-        command: { kind: "ASSIGN_CARRIER", carrierId: carrier2.id, pickupSlot: nextPickupSlot() },
-        reason: "платёж исполнен — товар готов к забору"
       };
     }
     if (deal.ownership && !isOwnershipConfirmed(deal) && !deal.ownership.revokedAt && hasCompleteEvidence(deal.ownership.evidence)) {
@@ -3958,8 +3965,8 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
         { id: "PT-004", name: "Smartup", code: "smartup", mode: "Mapping draft", sla: "—", errorRate: 0, status: "inactive", channelLimit: 0, statusMapping: {} }
       ],
       products: [
-        { code: "MRB-30", name: "Мурабаха 30 дней", term: 30, installments: 1, markup: 2.5, min: 1e6, max: 5e7, deposit: 5, status: "active" },
-        { code: "MRB-90", name: "Мурабаха 90 дней", term: 90, installments: 3, markup: 7, min: 2e6, max: 12e7, deposit: 5, status: "active" },
+        { code: "MRB-30", name: "Мурабаха 30 дней", term: 30, installments: 1, markup: 2.5, min: 1e6, max: 5e7, deposit: 10, status: "active" },
+        { code: "MRB-90", name: "Мурабаха 90 дней", term: 90, installments: 3, markup: 7, min: 2e6, max: 12e7, deposit: 10, status: "active" },
         { code: "MRB-180", name: "Мурабаха 180 дней", term: 180, installments: 6, markup: 13, min: 5e6, max: 3e8, deposit: 10, status: "active" }
       ],
       applications: [
@@ -4495,7 +4502,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
 
         <section class="application-section"><div class="application-section-title"><i data-lucide="building-2"></i><div><h3>Поставка и канал</h3><p>Поставщик и источник заявки</p></div></div><dl class="detail-list"><dt>Поставщик</dt><dd>${esc(s?.name ?? a.supplierId)}</dd><dt>ИНН поставщика</dt><dd>${esc(s?.inn ?? "—")}</dd><dt>Категория</dt><dd>${esc(s?.category ?? "—")}</dd><dt>Контакт</dt><dd>${esc(s?.contact ?? "—")}</dd><dt>Партнёр</dt><dd>${esc(pt?.name ?? a.partnerId)}</dd><dt>Канал / режим</dt><dd>${esc(pt ? `${pt.code} · ${pt.mode}` : "—")}</dd><dt>SLA / ошибки</dt><dd>${esc(pt ? `${pt.sla} · ${pt.errorRate.toFixed(1)}%` : "—")}</dd></dl></section>
 
-        <section class="application-section"><div class="application-section-title"><i data-lucide="sliders-horizontal"></i><div><h3>Продукт Мурабаха</h3><p>Параметры предложения</p></div></div><dl class="detail-list"><dt>Код / продукт</dt><dd>${esc(p ? `${p.code} · ${p.name}` : a.productCode)}</dd><dt>Срок</dt><dd>${p ? `${p.term} дней` : "—"}</dd><dt>Платежей</dt><dd>${p?.installments ?? "—"}</dd><dt>Наценка за срок</dt><dd>${p ? `${p.markup}%` : "—"}</dd><dt>Задаток</dt><dd>${p ? `${p.deposit}%` : "—"}</dd><dt>Допустимая сумма</dt><dd>${p ? `${sum2(p.min)} – ${sum2(p.max)}` : "—"}</dd><dt>Предмет финансирования</dt><dd>${esc(a.item)}</dd></dl></section>
+        <section class="application-section"><div class="application-section-title"><i data-lucide="sliders-horizontal"></i><div><h3>Продукт Мурабаха</h3><p>Параметры предложения</p></div></div><dl class="detail-list"><dt>Код / продукт</dt><dd>${esc(p ? `${p.code} · ${p.name}` : a.productCode)}</dd><dt>Срок</dt><dd>${p ? `${p.term} дней` : "—"}</dd><dt>Платежей</dt><dd>${p?.installments ?? "—"}</dd><dt>Наценка за срок</dt><dd>${p ? `${p.markup}%` : "—"}</dd><dt>Мин. первоначальный взнос</dt><dd>${p ? `${p.deposit}%` : "—"}</dd><dt>Допустимая сумма</dt><dd>${p ? `${sum2(p.min)} – ${sum2(p.max)}` : "—"}</dd><dt>Предмет финансирования</dt><dd>${esc(a.item)}</dd></dl></section>
       </div>
 
       <section class="application-section application-scoring-section"><div class="application-section-title"><i data-lucide="shield-check"></i><div><h3>Скоринг и проверки</h3><p>Объяснимые причины решения · ${esc(ops.policy.version)}</p></div></div><div class="application-check-grid">
@@ -4625,7 +4632,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
   }
   function productsView() {
     return `<div class="card"><div class="card-head"><div><h2>Продукты и правила Мурабаха</h2><p>Версии параметров используются скорингом и расчётом предложения.</p></div><span class="spacer"></span><button class="btn btn-primary" data-act="ops:new:product">+ Новый продукт</button></div>
-    <div class="product-grid">${ops.products.map((p) => `<div class="product-card"><div class="product-top"><span class="mono">${p.code}</span>${pill(p.status === "active" ? "Активен" : "Архив", p.status === "active" ? "ok" : "neutral")}</div><h3>${esc(p.name)}</h3><div class="product-markup"><strong>${p.markup}%</strong><span>наценка за срок</span></div><dl><dt>Срок</dt><dd>${p.term} дней</dd><dt>Платежей</dt><dd>${p.installments}</dd><dt>Диапазон</dt><dd>${sum2(p.min)} – ${sum2(p.max)}</dd><dt>Задаток</dt><dd>${p.deposit}%</dd></dl><div class="btn-row"><button class="btn btn-sm" data-act="ops:edit:product:${p.code}">Изменить</button><button class="btn btn-sm" data-act="ops:toggle:product:${p.code}">${p.status === "active" ? "Архивировать" : "Активировать"}</button></div></div>`).join("")}</div>
+    <div class="product-grid">${ops.products.map((p) => `<div class="product-card"><div class="product-top"><span class="mono">${p.code}</span>${pill(p.status === "active" ? "Активен" : "Архив", p.status === "active" ? "ok" : "neutral")}</div><h3>${esc(p.name)}</h3><div class="product-markup"><strong>${p.markup}%</strong><span>наценка за срок</span></div><dl><dt>Срок</dt><dd>${p.term} дней</dd><dt>Платежей</dt><dd>${p.installments}</dd><dt>Диапазон</dt><dd>${sum2(p.min)} – ${sum2(p.max)}</dd><dt>Мин. первоначальный взнос</dt><dd>${p.deposit}%</dd></dl><div class="btn-row"><button class="btn btn-sm" data-act="ops:edit:product:${p.code}">Изменить</button><button class="btn btn-sm" data-act="ops:toggle:product:${p.code}">${p.status === "active" ? "Архивировать" : "Активировать"}</button></div></div>`).join("")}</div>
     <div class="card-note">Термин «процент по кредиту» не используется. Наценка фиксируется до подписания и не увеличивается из-за просрочки.</div>
   </div>`;
   }
@@ -4721,7 +4728,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     </div>`;
     const specs = {
       promise: { title: `Обещание клиента · ${dealId}`, submit: "Зарегистрировать wa’d", fields: `<div class="form-grid"><label>Номер документа<input name="documentId" value="WAD-${dealId}" required></label><label>Дата подписания<input name="signedDate" type="date" value="${today}" required></label><label class="wide checkbox-field"><input name="binding" type="checkbox" required checked><span>Обещание является обязывающим для клиента</span></label>${uploadField("promiseFile", "Подписанное обещание клиента")}</div>` },
-      invoice: { title: `Счёт поставщика · ${dealId}`, submit: "Зарегистрировать счёт", fields: `<div class="approval-summary"><span>Поставщик</span><b>${esc(extras?.supplierName ?? deal.supplierInn)}</b><span>Расчётный счёт</span><b class="mono">${esc(supplierRecord?.account ?? "—")}</b><span>Товар</span><b>${esc(itemsSummary)}</b><span>Клиент</span><b>${esc(extras?.clientName ?? deal.clientInn)}</b></div><div class="form-grid"><label>Номер счёта<input name="invoiceNumber" value="INV-${ops.seq + 1e3}" required></label><label>Дата счёта<input name="invoiceDate" type="date" value="${today}" required></label><label>Получатель<select name="billedTo"><option value="NUR_FINANCE">Nur Finance</option><option value="CLIENT">Клиент</option></select></label><label>Сумма, сум<input name="amount" type="number" value="${Math.round(amount)}" min="1" required></label>${uploadField("invoiceFile", "Счёт поставщика (необязательно, данные уже заполнены системой)", false)}</div>` },
+      invoice: { title: `Согласие на продажу · ${dealId}`, submit: "Подтвердить согласие на продажу", fields: `<div class="approval-summary"><span>Покупатель</span><b>Nur Finance</b><span>Поставщик</span><b>${esc(extras?.supplierName ?? deal.supplierInn)}</b><span>Расчётный счёт</span><b class="mono">${esc(supplierRecord?.account ?? "—")}</b><span>Товар</span><b>${esc(itemsSummary)}</b><span>Грузополучатель (от имени Nur Finance)</span><b>${esc(extras?.clientName ?? deal.clientInn)}</b></div><div class="info-box">Подтверждая, вы даёте согласие продать товар покупателю Nur Finance. Накладная регистрируется сразу, и заявка тут же передаётся перевозчику — оплата по счёту проводится отдельно бухгалтерией и не задерживает отгрузку.</div><div class="form-grid"><label>Номер счёта<input name="invoiceNumber" value="INV-${ops.seq + 1e3}" required></label><label>Дата счёта<input name="invoiceDate" type="date" value="${today}" required></label><label>Получатель<select name="billedTo"><option value="NUR_FINANCE">Nur Finance</option><option value="CLIENT">Клиент</option></select></label><label>Сумма, сум<input name="amount" type="number" value="${Math.round(amount)}" min="1" required></label>${uploadField("invoiceFile", "Счёт поставщика (необязательно, данные уже заполнены системой)", false)}</div>` },
       "invoice-bad": { title: `Проверка неверного счёта · ${dealId}`, submit: "Проверить блокировку", fields: `<div class="form-grid"><label>Номер счёта<input name="invoiceNumber" value="INV-BAD" required></label><label>Получатель<input name="billedTo" value="CLIENT" readonly></label><label class="wide">Сумма, сум<input name="amount" type="number" value="${Math.round(amount)}" required></label>${uploadField("invoiceFile", "Тестовый счёт", false)}</div><div class="info-box danger-info">Доменное ядро должно отклонить счёт, выставленный непосредственно клиенту.</div>` },
       "pay-request": { title: `Заявка на платёж · ${dealId}`, submit: "Отправить на согласование", fields: `${paymentContext}<div class="form-grid"><label>Сумма, сум<input name="amount" type="number" value="${Math.round(amount)}" min="1" required></label><label>Плановая дата<input name="paymentDate" type="date" value="${today}" required></label><label>Счёт списания<input name="debitAccount" value="${esc(NUR_FINANCE_ACCOUNT)}" required></label><label>Назначение<input name="purpose" value="${purposeText}" required></label><label class="wide">Комментарий<textarea name="comment" rows="2">Проверено операционным специалистом</textarea></label></div>` },
       "pay-approve": { title: `Одобрение платежа · ${dealId}`, submit: "Одобрить платёж", fields: `${paymentContext}<div class="form-grid"><label class="wide">Комментарий финансового менеджера<textarea name="comment" rows="3" required>Реквизиты и основание платежа проверены</textarea></label><label class="wide checkbox-field"><input name="approved" type="checkbox" required><span>Подтверждаю проверку суммы, получателя и разделение полномочий</span></label></div>` },
@@ -4756,14 +4763,15 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     if (!offer) return "";
     const itemsLabel = extras?.items?.map((item) => item.name).join(", ") ?? deal.clientInn;
     return `<div class="modal-backdrop"><section class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="client-offer-title">
-    <div class="modal-head"><div><span class="eyebrow">Оферта Мурабаха · ${esc(deal.id)}</span><h2 id="client-offer-title">${esc(itemsLabel)}</h2></div><button type="button" class="modal-x" data-act="ops:modal:close" aria-label="Закрыть"><i data-lucide="x"></i></button></div>
+    <div class="modal-head"><div><span class="eyebrow">Запрос об актуальности заявки · ${esc(deal.id)}</span><h2 id="client-offer-title">${esc(itemsLabel)}</h2></div><button type="button" class="modal-x" data-act="ops:modal:close" aria-label="Закрыть"><i data-lucide="x"></i></button></div>
     <div style="padding:0 22px 22px">
+      <p class="info-box">Nur Finance закупил товар и уточняет, актуальна ли для вас эта покупка на приведённых ниже условиях. Ознакомьтесь с себестоимостью, наценкой и графиком, затем подтвердите актуальность или откажитесь.</p>
       <div class="approval-summary"><span>Себестоимость</span><b>${sums(offer.cost)}</b><span>Наценка</span><b>${sums(offer.markup)}</b><span>Итоговая цена</span><b>${sums(offer.salePrice)}</b></div>
       <div class="section-title">График платежей</div>
       ${offerScheduleTable(offer.schedule)}
-      <div class="info-box">Приняв оферту, вы соглашаетесь купить товар у Nur Finance по цене ${sums(offer.salePrice)} с рассрочкой на ${offer.schedule.installments.length} платеж(ей). Себестоимость и наценка зафиксированы и не изменятся после принятия.</div>
+      <div class="info-box">Подтверждая актуальность, вы соглашаетесь купить товар у Nur Finance по цене ${sums(offer.salePrice)} с рассрочкой на ${offer.schedule.installments.length} платеж(ей). Себестоимость и наценка зафиксированы и не изменятся после подтверждения.</div>
     </div>
-    <footer class="application-detail-actions"><button class="btn" type="button" data-act="ops:modal:close"><i data-lucide="x"></i>Закрыть</button><span></span><button class="btn" type="button" data-act="ops:client-offer:reject:${esc(deal.id)}">Отказаться</button><button class="btn btn-primary" type="button" data-act="ops:client-offer:accept:${esc(deal.id)}"><i data-lucide="check"></i>Принять оферту</button></footer>
+    <footer class="application-detail-actions"><button class="btn" type="button" data-act="ops:modal:close"><i data-lucide="x"></i>Закрыть</button><span></span><button class="btn" type="button" data-act="ops:client-offer:reject:${esc(deal.id)}">Отказаться</button><button class="btn btn-primary" type="button" data-act="ops:client-offer:accept:${esc(deal.id)}"><i data-lucide="check"></i>Подтвердить актуальность</button></footer>
   </section></div>`;
   }
   function clientContractModal(deal) {
@@ -4788,7 +4796,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
   }
   // Реквизиты Nurfin как стороны Wa'd — постоянны для всех сделок демо.
   var NURFIN_ORG = { name: "«NUR FINANCE» MChJ", inn: "[STIR to'ldiriladi]", address: "Toshkent shahri" };
-  var wadForm = { place: "Toshkent shahri", clientAddress: "", repName: "", repPosition: "", repBasis: "Ustav" };
+  var wadForm = { place: "Toshkent shahri", clientAddress: "", repName: "", repPosition: "", repBasis: "Ustav", depositRatePercent: "10", depositMinPercent: 10 };
   var signatureHasStroke = false;
   var contractSignatureHasStroke = false;
   function wadBlank(value) {
@@ -4805,8 +4813,10 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     const items = extras.items ?? [];
     const amount = Number(deal.requestedAmount) / 100;
     const markup = product2 ? amount * product2.markupRate : 0;
-    const deposit = product2 ? amount * product2.depositRate : 0;
     const promise = deal.promise;
+    const minDepositRate = product2?.depositRate ?? 0;
+    const depositRate = promise?.depositRate ?? (Number(wadForm.depositRatePercent) / 100 || minDepositRate);
+    const deposit = amount * depositRate;
     return {
       dealId: deal.id,
       place: promise?.place ?? wadForm.place,
@@ -4817,7 +4827,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
       deliveryAddress: promise?.clientAddress ?? wadForm.clientAddress,
       amount, markup, markupRate: product2?.markupRate ?? null,
       termDaysProduct: product2?.code?.split("-")[1] ?? null, installments: product2?.installments ?? null,
-      deposit, wadTermDays: 30, signatureUrl: promise?.signatureUrl ?? null
+      deposit, depositRate, minDepositRate, wadTermDays: 30, signatureUrl: promise?.signatureUrl ?? null
     };
   }
   /** Wa'd hujjatining to'liq matni — faqat lokal maydonlardan yig'iladi, hech qanday server so'rovi yo'q. */
@@ -4909,7 +4919,9 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
         <label>Ф.И.О. представителя<input id="wad-rep-name" type="text" value="${esc(wadForm.repName)}" placeholder="Иванов Иван" required></label>
         <label>Должность<input id="wad-rep-position" type="text" value="${esc(wadForm.repPosition)}" placeholder="Директор" required></label>
         <label class="wide">Адрес организации<input id="wad-client-address" type="text" value="${esc(wadForm.clientAddress)}" placeholder="г. Ташкент, ул. ..." required></label>
+        <label>Первоначальный взнос, %<input id="wad-deposit-percent" type="number" min="${wadForm.depositMinPercent}" step="1" value="${esc(wadForm.depositRatePercent)}" required></label>
       </div>
+      <p id="wad-deposit-hint" class="info-box">Минимум по продукту — ${wadForm.depositMinPercent}%. По желанию можно внести больше — сумма зафиксируется в этом wa'd.</p>
       <button type="button" class="btn btn-sm" data-act="ops:client-wad:preview:${esc(deal.id)}"><i data-lucide="file-text"></i>Прочитать текст обещания</button>
       <canvas id="wad-signature-canvas" class="signature-canvas" width="600" height="220"></canvas>
       <div class="signature-pad-actions"><button type="button" class="btn btn-sm" data-act="ops:client-wad:clear"><i data-lucide="eraser"></i>Очистить</button></div>
@@ -5011,7 +5023,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     if (kind === "client") return `<div class="form-grid"><label>Название<input name="name" value="${val(e, "name")}" required></label><label>ИНН<input name="inn" value="${val(e, "inn")}" required></label><label>Тип<input name="type" value="${val(e, "type", "ООО")}"></label><label>Телефон<input name="phone" value="${val(e, "phone", "+998 ")}"></label><label>Возраст, месяцев<input name="monthsActive" type="number" value="${val(e, "monthsActive", "12")}"></label><label>Выручка, сум<input name="revenue" type="number" value="${val(e, "revenue", "1000000000")}"></label><label>Лимит, сум<input name="limit" type="number" value="${val(e, "limit", "50000000")}"></label><label>Экспозиция, сум<input name="exposure" type="number" value="${val(e, "exposure", "0")}"></label><label>Дней просрочки<input name="overdueDays" type="number" value="${val(e, "overdueDays", "0")}"></label><label>Риск<select name="risk">${["A", "B", "C", "D"].map((x) => `<option ${val(e, "risk", "B") === x ? "selected" : ""}>${x}</option>`).join("")}</select></label><label>Статус${statusSelect(e)}</label></div>`;
     if (kind === "supplier") return `<div class="form-grid"><label>Название<input name="name" value="${val(e, "name")}" required></label><label>ИНН<input name="inn" value="${val(e, "inn")}" required></label><label>Категория<input name="category" value="${val(e, "category", "Фармацевтика")}"></label><label>Контакт<input name="contact" value="${val(e, "contact")}"></label><label>Статус${statusSelect(e)}</label></div>`;
     if (kind === "partner") return `<div class="form-grid"><label>Название<input name="name" value="${val(e, "name")}" required></label><label>Код<input name="code" value="${val(e, "code")}" required></label><label>Режим обмена<input name="mode" value="${val(e, "mode", "API")}"></label><label>SLA<input name="sla" value="${val(e, "sla", "99,0%")}"></label><label>Ошибки, %<input name="errorRate" type="number" step="0.1" value="${val(e, "errorRate", "0")}"></label><label>Ключ API<input name="apiKey" value="${val(e, "apiKey")}" placeholder="pk_live_…"></label><label>Лимит канала, сум<input name="channelLimit" type="number" value="${val(e, "channelLimit", "0")}"></label><label>Статус${statusSelect(e)}</label></div>`;
-    if (kind === "product") return `<div class="form-grid"><label>Код<input name="code" value="${val(e, "code")}" required ${val(e, "code") ? "readonly" : ""}></label><label>Название<input name="name" value="${val(e, "name")}" required></label><label>Срок, дней<input name="term" type="number" value="${val(e, "term", "90")}"></label><label>Количество платежей<input name="installments" type="number" value="${val(e, "installments", "3")}"></label><label>Наценка за срок, %<input name="markup" type="number" step="0.1" value="${val(e, "markup", "7")}"></label><label>Задаток, %<input name="deposit" type="number" value="${val(e, "deposit", "5")}"></label><label>Минимум, сум<input name="min" type="number" value="${val(e, "min", "2000000")}"></label><label>Максимум, сум<input name="max" type="number" value="${val(e, "max", "120000000")}"></label><label>Статус${statusSelect(e)}</label></div>`;
+    if (kind === "product") return `<div class="form-grid"><label>Код<input name="code" value="${val(e, "code")}" required ${val(e, "code") ? "readonly" : ""}></label><label>Название<input name="name" value="${val(e, "name")}" required></label><label>Срок, дней<input name="term" type="number" value="${val(e, "term", "90")}"></label><label>Количество платежей<input name="installments" type="number" value="${val(e, "installments", "3")}"></label><label>Наценка за срок, %<input name="markup" type="number" step="0.1" value="${val(e, "markup", "7")}"></label><label>Мин. первоначальный взнос, %<input name="deposit" type="number" value="${val(e, "deposit", "10")}"></label><label>Минимум, сум<input name="min" type="number" value="${val(e, "min", "2000000")}"></label><label>Максимум, сум<input name="max" type="number" value="${val(e, "max", "120000000")}"></label><label>Статус${statusSelect(e)}</label></div>`;
     return `<div class="form-grid"><label>Имя<input name="name" value="${val(e, "name")}" required></label><label>Роль<input name="role" value="${val(e, "role", "Operations Specialist")}"></label><label>Подразделение<input name="unit" value="${val(e, "unit", "Операции")}"></label><label>Статус${statusSelect(e)}</label></div>`;
   }
   function formFile(form, name) {
@@ -5276,7 +5288,15 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     } else if (action === "invoice" || action === "invoice-bad") {
       ok = runCommandRouted(dealId, { kind: "REGISTER_SUPPLIER_INVOICE", invoiceNumber: str("invoiceNumber"), billedTo: str("billedTo"), amount: fromSum(String(Math.round(num("amount")))) }, "u-02");
       if (ok) recordUploadedDocument(form, "invoiceFile", dealId, "Счёт", `Счёт поставщика ${str("invoiceNumber")}`, "verified", str("invoiceNumber"));
-      message = "Счёт поставщика проверен и добавлен в комплект сделки.";
+      if (ok && action === "invoice") {
+        const carrier2 = CARRIERS[0];
+        const dealNow = getDeal(dealId);
+        if (carrier2 && dealNow && !dealNow.delivery) {
+          const dispatched = runCommandRouted(dealId, { kind: "ASSIGN_CARRIER", carrierId: carrier2.id, pickupSlot: nextPickupSlot() }, "u-02");
+          if (dispatched) recordActionNote(dealId, "Логистика", `Товарный трек не ждёт оплаты: перевозчик ${carrier2.name} назначен сразу после согласия поставщика`);
+        }
+      }
+      message = "Поставщик дал согласие на продажу. Накладная зарегистрирована и заявка сразу передана перевозчику — оплата обрабатывается отдельно и не задерживает отгрузку.";
     } else if (action === "pay-request") {
       const capacity = portfolioCapacity();
       const requested = num("amount");
@@ -5640,6 +5660,11 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     if (verb === "client-wad") {
       if (kind === "open" && id) {
         signatureHasStroke = false;
+        const wadDeal = getDeal(id);
+        const wadProduct = wadDeal ? productFor(wadDeal.id) : null;
+        const minPercent = Math.round((wadProduct?.depositRate ?? 0.1) * 1000) / 10;
+        wadForm.depositMinPercent = minPercent;
+        wadForm.depositRatePercent = String(wadDeal?.promise?.depositRate ? Math.round(wadDeal.promise.depositRate * 1000) / 10 : minPercent);
         ops.modal = { kind: "client-wad", id };
         changed();
         return;
@@ -5668,9 +5693,15 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
           notify("error", "Распишитесь пальцем или мышью перед подтверждением.");
           return;
         }
+        const depositPercent = Number(wadForm.depositRatePercent);
+        if (!Number.isFinite(depositPercent) || depositPercent < wadForm.depositMinPercent) {
+          notify("error", `Первоначальный взнос не может быть меньше минимума по продукту (${wadForm.depositMinPercent}%).`);
+          return;
+        }
+        const depositRate = depositPercent / 100;
         const canvas = document.getElementById("wad-signature-canvas");
         const signatureUrl = canvas ? canvas.toDataURL("image/png") : null;
-        const ok = runCommandRouted(id, { kind: "REGISTER_PROMISE", documentId: `WAD-${id}`, binding: true }, "u-02");
+        const ok = runCommandRouted(id, { kind: "REGISTER_PROMISE", documentId: `WAD-${id}`, binding: true, depositRate }, "u-02");
         if (ok) {
           update((s) => {
             const signed = s.deals.find((d) => d.id === id);
@@ -5683,11 +5714,13 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
                 signatureUrl
               });
             }
+            const extras = s.extras[id];
+            if (extras) extras.deposit = signed.requestedAmount * BigInt(Math.round(depositRate * 1e3)) / 1000n;
           });
         }
         ops.modal = null;
         signatureHasStroke = false;
-        changed(ok ? "Обещание купить зарегистрировано. Далее — счёт поставщика." : void 0);
+        changed(ok ? "Обещание купить зарегистрировано. Далее — согласие поставщика на продажу." : void 0);
         return;
       }
       return;
@@ -6183,14 +6216,14 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     const paid = isPaymentSettled(deal);
     const specs = [
       { id: "promise", label: "Зарегистрировать обещание (wa'd)", show: !deal.promise, kind: "primary" },
-      { id: "invoice", label: "Зарегистрировать счёт поставщика", show: Boolean(deal.promise) && !deal.supplierInvoice },
+      { id: "invoice", label: "Согласие поставщика на продажу (счёт)", show: Boolean(deal.promise) && !deal.supplierInvoice },
       { id: "invoice-bad", label: "Счёт на клиента (проверка блокировки)", show: Boolean(deal.promise) && !deal.supplierInvoice, kind: "danger" },
       { id: "pay-request", label: deal.supplierPayment?.reversedAt ? "Создать новую заявку на платёж (после сторно)" : "Создать заявку на платёж", show: Boolean(deal.supplierInvoice) && (!deal.supplierPayment || Boolean(deal.supplierPayment.reversedAt)) },
       { id: "pay-approve", label: "Одобрить платёж (R-03)", show: Boolean(deal.supplierPayment) && !deal.supplierPayment?.approvedAt },
       { id: "pay-confirm", label: "Подтвердить исполнение платежа", show: Boolean(deal.supplierPayment?.approvedAt) && !paid },
-      // Забор товара перевозчиком создаёт владение, поэтому назначение перевозчика —
-      // штатный путь. Ручная загрузка доказательств остаётся для случаев без перевозки.
-      { id: "carrier-assign", label: "Назначить перевозчика на забор товара", show: paid && !deal.delivery, kind: "primary" },
+      // Товарный трек идёт параллельно бухгалтерскому: перевозчик назначается сразу
+      // после согласия поставщика на продажу (счёт), не дожидаясь оплаты поставщику.
+      { id: "carrier-assign", label: "Назначить перевозчика на забор товара", show: Boolean(deal.supplierInvoice) && !deal.delivery, kind: "primary" },
       // Условие повторяет доменные блокировки REVERSE_SUPPLIER_PAYMENT: после
       // договора нельзя, и нельзя пока товар физически удерживается.
       { id: "pay-reverse", label: "Сторнировать платёж поставщику", show: paid && !deal.contract && !(deal.delivery?.pickedUpAt && !deal.delivery.returnedAt), kind: "danger" },
@@ -6877,12 +6910,21 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     if (action === "sign") return `ops:client-contract:open:${dealId}`;
     return `do:${dealId}:${action}`;
   }
+  function depositInfoLine(deal) {
+    if (!deal) return "";
+    const product2 = productFor(deal.id);
+    const minPercent = Math.round((product2?.depositRate ?? 0.1) * 1000) / 10;
+    if (!deal.promise) return `Первоначальный взнос — от ${minPercent}% при подписании wa'd`;
+    const percent = deal.promise.depositRate ? Math.round(deal.promise.depositRate * 1000) / 10 : minPercent;
+    const amountBig = deal.requestedAmount * BigInt(Math.round(percent * 10)) / 1000n;
+    return `Первоначальный взнос: ${sums(amountBig)} (${percent}%)`;
+  }
   function applicationCard(app) {
     const state3 = app.status === "approved" ? ["Одобрена", "ok"] : app.status === "review" ? ["На проверке", "warn"] : app.status === "declined" ? ["Отклонена", "danger"] : ["Черновик", "neutral"];
     const deal = app.dealId ? getState().deals.find((item) => item.id === app.dealId) : void 0;
-    const action = deal && (!deal.promise ? ["promise", "Подписать wa’d"] : deal.status.con === "CON_OFFER_SENT" ? ["accept", "Принять оферту"] : deal.status.con === "CON_ACCEPTED" ? ["sign", "Подписать договор"] : deal.status.dlv === "DLV_DELIVERED" ? ["delivery-accept", "Принять товар"] : null);
+    const action = deal && (!deal.promise ? ["promise", "Подписать wa’d"] : deal.status.con === "CON_OFFER_SENT" ? ["accept", "Ознакомиться"] : deal.status.con === "CON_ACCEPTED" ? ["sign", "Подписать договор"] : deal.status.dlv === "DLV_DELIVERED" ? ["delivery-accept", "Принять товар"] : null);
     const canRefuse = deal?.status.con === "CON_OFFER_SENT";
-    return `<article class="client-list-card"><div><span>${esc(app.id)}</span>${pill(state3[0], state3[1])}</div><h3>${esc(app.item)}</h3><p>${asSum(app.amount)} · скоринг ${app.score}</p>${app.dealId ? `<small>Сделка ${esc(app.dealId)}</small>` : ""}${action && deal ? `<div class="client-card-actions"><button class="btn btn-primary client-card-action" data-act="${clientTaskAct(esc(deal.id), action[0])}">${action[1]}</button>${canRefuse ? `<button class="btn client-card-action" data-act="ops:client-offer:open:${esc(deal.id)}">Отказаться</button>` : ""}</div>` : ""}</article>`;
+    return `<article class="client-list-card"><div><span>${esc(app.id)}</span>${pill(state3[0], state3[1])}</div><h3>${esc(app.item)}</h3><p>${asSum(app.amount)} · скоринг ${app.score}</p>${app.dealId ? `<small>Сделка ${esc(app.dealId)}</small>` : ""}${deal ? `<small>${esc(depositInfoLine(deal))}</small>` : ""}${action && deal ? `<div class="client-card-actions"><button class="btn btn-primary client-card-action" data-act="${clientTaskAct(esc(deal.id), action[0])}">${action[1]}</button>${canRefuse ? `<button class="btn client-card-action" data-act="ops:client-offer:open:${esc(deal.id)}">Отказаться</button>` : ""}</div>` : ""}</article>`;
   }
   function deliveryCard(deal) {
     const delivered = deal.status.dlv === "DLV_DELIVERED";
@@ -6906,7 +6948,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     const snapshot = clientPortalSnapshot(sessionClientId());
     const deals = getState().deals.filter((deal) => deal.clientInn === snapshot.client.inn);
     const taskDeal = deals.find((deal) => !deal.promise || deal.status.con === "CON_OFFER_SENT" || deal.status.con === "CON_ACCEPTED" || deal.status.dlv === "DLV_DELIVERED");
-    const task = taskDeal && (!taskDeal.promise ? ["promise", "Подписать wa’d", "Обещание нужно для запуска закупки"] : taskDeal.status.con === "CON_OFFER_SENT" ? ["accept", "Принять оферту", "Проверьте цену, наценку и график"] : taskDeal.status.con === "CON_ACCEPTED" ? ["sign", "Подписать договор", "Завершите оформление Мурабахи"] : ["delivery-accept", "Принять товар", "Курьер доставил заказ — подтвердите приёмку"]);
+    const task = taskDeal && (!taskDeal.promise ? ["promise", "Подписать wa’d", "Обещание нужно для запуска закупки"] : taskDeal.status.con === "CON_OFFER_SENT" ? ["accept", "Ознакомиться", "Пришёл запрос об актуальности заявки — проверьте цену, наценку и график"] : taskDeal.status.con === "CON_ACCEPTED" ? ["sign", "Подписать договор", "Завершите оформление Мурабахи"] : ["delivery-accept", "Принять товар", "Курьер доставил заказ — подтвердите приёмку"]);
     const enRoute = deals.filter((deal) => deal.delivery?.pickedUpAt && deal.status.dlv !== "DLV_ACCEPTED" && deal.status.dlv !== "DLV_RETURNED");
     return `<section class="client-screen">
     <header class="client-greeting"><div><span>Добрый день</span><h1>${esc(snapshot.client.name)}</h1></div><div class="client-avatar">${esc(initials(snapshot.client.name))}</div></header>
@@ -6964,9 +7006,9 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
   }
   function vendorOrder(deal, tab2) {
     const extras = getExtras(deal.id);
-    const action = tab2 === "orders" ? `<button class="btn btn-primary" data-act="do:${deal.id}:invoice"><i data-lucide="upload-cloud"></i>Выставить счёт</button>` : tab2 === "handover" ? `<div class="vendor-awaiting"><i data-lucide="truck"></i><span>${deal.delivery ? `Перевозчик назначен на ${esc((deal.delivery.pickupSlot || "").replace("T", " "))}` : "Ожидается назначение перевозчика Nur Finance"}</span></div>` : "";
+    const action = tab2 === "orders" ? `<button class="btn btn-primary" data-act="do:${deal.id}:invoice"><i data-lucide="circle-check"></i>Дать согласие на продажу</button>` : tab2 === "handover" ? `<div class="vendor-awaiting"><i data-lucide="truck"></i><span>${deal.delivery ? `Перевозчик назначен на ${esc((deal.delivery.pickupSlot || "").replace("T", " "))}` : "Ожидается назначение перевозчика Nur Finance"}</span></div>` : "";
     const openedAt = deal.audit[0]?.at ?? /* @__PURE__ */ new Date();
-    return `<article class="vendor-order-card"><div class="vendor-order-main"><div class="vendor-order-id"><span>${esc(deal.id)}</span>${statusPill("pur", deal.status.pur)}</div><h3>${esc(extras?.items.map((item) => item.name).join(", ") || "Товары по заявке")}</h3><p>Грузополучатель: <b>${esc(extras?.clientName ?? deal.clientInn)}</b></p><div class="vendor-order-meta"><span><i data-lucide="boxes"></i>${extras?.items.reduce((n, item) => n + item.qty, 0) ?? 0} ед.</span><span><i data-lucide="calendar-days"></i>${dateOnly(openedAt.toISOString().slice(0, 10))}</span>${deal.supplierPayment?.paymentOrderNumber ? `<span><i data-lucide="landmark"></i>${esc(deal.supplierPayment.paymentOrderNumber)}</span>` : ""}${deal.delivery?.waybillNumber ? `<span><i data-lucide="file-text"></i>${esc(deal.delivery.waybillNumber)}</span>` : ""}</div></div><div class="vendor-order-price"><span>Сумма по счёту</span><strong>${sums(deal.supplierInvoice?.amount ?? deal.requestedAmount)}</strong>${action}</div></article>`;
+    return `<article class="vendor-order-card"><div class="vendor-order-main"><div class="vendor-order-id"><span>${esc(deal.id)}</span>${statusPill("pur", deal.status.pur)}</div><h3>${esc(extras?.items.map((item) => item.name).join(", ") || "Товары по заявке")}</h3><p class="vendor-buyer-line">${pill("Покупатель: Nur Finance", "accent")}</p><p>Грузополучатель (от имени Nur Finance): <b>${esc(extras?.clientName ?? deal.clientInn)}</b></p><div class="vendor-order-meta"><span><i data-lucide="boxes"></i>${extras?.items.reduce((n, item) => n + item.qty, 0) ?? 0} ед.</span><span><i data-lucide="calendar-days"></i>${dateOnly(openedAt.toISOString().slice(0, 10))}</span>${deal.supplierPayment?.paymentOrderNumber ? `<span><i data-lucide="landmark"></i>${esc(deal.supplierPayment.paymentOrderNumber)}</span>` : ""}${deal.delivery?.waybillNumber ? `<span><i data-lucide="file-text"></i>${esc(deal.delivery.waybillNumber)}</span>` : ""}</div></div><div class="vendor-order-price"><span>Сумма к продаже</span><strong>${sums(deal.supplierInvoice?.amount ?? deal.requestedAmount)}</strong>${action}</div></article>`;
   }
   function vendorSignInView() {
     const { suppliers } = portalAccounts();
@@ -7000,7 +7042,10 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     }
     const deals = getState().deals.filter((deal) => deal.supplierInn === me.inn);
     const invoice = deals.filter((deal) => deal.promise && !deal.supplierInvoice);
-    const handover = deals.filter((deal) => deal.supplierPayment?.confirmedAt && !deal.delivery?.pickedUpAt);
+    // Товарный трек не ждёт оплату: как только поставщик дал согласие на продажу
+    // (счёт зарегистрирован), заказ переходит на передачу перевозчику вне зависимости
+    // от того, прошла ли оплата поставщику — этот трек ведётся отдельно бухгалтерией.
+    const handover = deals.filter((deal) => deal.supplierInvoice && !deal.delivery?.pickedUpAt);
     const shipment = deals.filter((deal) => deal.delivery?.pickedUpAt);
     const paid = deals.filter((deal) => deal.supplierPayment?.confirmedAt);
     const queue = vendorTab === "orders" ? invoice : vendorTab === "handover" ? handover : vendorTab === "shipments" ? shipment : paid;
@@ -7133,14 +7178,14 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     const state3 = getState();
     const deal = app.dealId ? state3.deals.find((item) => item.id === app.dealId) : void 0;
     const tone = app.status === "approved" ? ["Одобрена", "ok"] : app.status === "review" ? ["На проверке", "warn"] : app.status === "declined" ? ["Отклонена", "danger"] : ["Черновик", "neutral"];
-    const stage = !deal ? "" : !deal.promise ? "Ожидает подписания wa'd покупателем" : deal.status.con === "CON_OFFER_SENT" ? "Оферта отправлена покупателю" : deal.status.con === "CON_ACCEPTED" ? "Оферта принята — нужен договор" : deal.status.dlv === "DLV_DELIVERED" ? "Доставлено — ожидает приёмки" : deal.status.pay === "PAY_CLOSED" ? "Сделка закрыта" : "В работе";
+    const stage = !deal ? "" : !deal.promise ? "Ожидает подписания wa'd покупателем" : deal.status.con === "CON_OFFER_SENT" ? "Запрос об актуальности заявки отправлен покупателю" : deal.status.con === "CON_ACCEPTED" ? "Актуальность подтверждена — нужен договор" : deal.status.dlv === "DLV_DELIVERED" ? "Доставлено — ожидает приёмки" : deal.status.pay === "PAY_CLOSED" ? "Сделка закрыта" : "В работе";
     let action = "";
     if (deal && opts.mode === "agent") {
       if (!deal.promise) action = `<button class="btn btn-primary" data-act="portal:agent-wad:${esc(deal.id)}"><i data-lucide="smartphone"></i>Передать телефон покупателю</button>`;
       else action = `<span class="adp-hint"><i data-lucide="info"></i>Следующий шаг покупатель делает в своём кабинете</span>`;
     }
     if (deal && opts.mode === "market") {
-      const next = !deal.promise ? ["promise", "Подписать wa'd"] : deal.status.con === "CON_OFFER_SENT" ? ["accept", "Принять оферту"] : deal.status.con === "CON_ACCEPTED" ? ["sign", "Подписать договор"] : deal.status.dlv === "DLV_DELIVERED" ? ["delivery-accept", "Принять товар"] : null;
+      const next = !deal.promise ? ["promise", "Подписать wa'd"] : deal.status.con === "CON_OFFER_SENT" ? ["accept", "Ознакомиться"] : deal.status.con === "CON_ACCEPTED" ? ["sign", "Подписать договор"] : deal.status.dlv === "DLV_DELIVERED" ? ["delivery-accept", "Принять товар"] : null;
       if (next) action = `<button class="btn btn-primary" data-act="${clientTaskAct(esc(deal.id), next[0])}">${next[1]}</button>`;
     }
     return `<article class="adp-order">
@@ -8686,6 +8731,18 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     if (target.id === "wad-rep-name") wadForm.repName = target.value;
     else if (target.id === "wad-rep-position") wadForm.repPosition = target.value;
     else if (target.id === "wad-client-address") wadForm.clientAddress = target.value;
+    else if (target.id === "wad-deposit-percent") {
+      wadForm.depositRatePercent = target.value;
+      const hint = document.getElementById("wad-deposit-hint");
+      const dealId = ops.modal?.kind === "client-wad" ? ops.modal.id : null;
+      const deal2 = dealId ? getDeal(dealId) : null;
+      if (hint && deal2) {
+        const percent = Number(wadForm.depositRatePercent) || wadForm.depositMinPercent;
+        const amountBig = deal2.requestedAmount * BigInt(Math.round(percent * 10)) / 1000n;
+        hint.textContent = percent < wadForm.depositMinPercent ? `Минимум по продукту — ${wadForm.depositMinPercent}%. Уменьшить нельзя, можно только увеличить.` : `Первоначальный взнос: ${sums(amountBig)} (${percent}% от суммы закупки)`;
+        hint.classList.toggle("danger-info", percent < wadForm.depositMinPercent);
+      }
+    }
   });
   document.addEventListener("click", (event2) => {
     const target = event2.target;
