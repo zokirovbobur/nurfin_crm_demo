@@ -3593,7 +3593,11 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     if (verb === "new") {
       const base = state2.products.find((entry) => entry.id === id) ?? [...state2.products].sort((a, b) => b.version - a.version)[0];
       const highest = state2.products.filter((entry) => entry.productCode === base.productCode).reduce((max2, entry) => Math.max(max2, entry.version), 0);
-      state2.products.unshift({ id: `PV-${++state2.seq}`, productCode: base.productCode, version: highest + 1, markup: base.markup + 0.5, activeFrom: new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10), status: "draft" });
+      // Черновик отталкивается от текущей ДЕЙСТВУЮЩЕЙ наценки продукта, а не от
+      // последней версии в этом журнале — иначе быстрое «Изменить» на карточке
+      // продукта осталось бы незамеченным здесь и новая версия занизила бы шаг.
+      const live = ops.products.find((p) => p.code === base.productCode);
+      state2.products.unshift({ id: `PV-${++state2.seq}`, productCode: base.productCode, version: highest + 1, markup: (live?.markup ?? base.markup) + 0.5, activeFrom: new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10), status: "draft" });
     }
     const item = state2.products.find((entry) => entry.id === id);
     if (!item) return;
@@ -3615,6 +3619,14 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
         entry.status = "archived";
       });
       item.status = "active";
+      // Активация версии — единственный момент, когда одобренная наценка должна
+      // попасть в реальный продукт (ops.products), иначе карточка на этой же
+      // странице показывала бы старое число, а checkout — ещё какое-то третье.
+      const target = ops.products.find((p) => p.code === item.productCode);
+      if (target) {
+        target.markup = item.markup;
+        saveOps();
+      }
     }
   }
   function handleDocument(verb, id) {
