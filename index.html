@@ -2597,11 +2597,28 @@ html[data-theme="dark"] .adp-hint,html[data-theme="dark"] .mkt-lines-foot{backgr
     { sku: "AUT-5004", name: "Шина летняя, R16", ikpu: "09003004001000000", category: "auto", supplier: "Zap Chast Servis", supplierInn: "308222333", unitPrice: fromSum("560000"), permitted: true },
     { sku: "AUT-5005", name: "Масляный фильтр универсальный", ikpu: "09003005001000000", category: "auto", supplier: "Zap Chast Servis", supplierInn: "308222333", unitPrice: fromSum("48000"), permitted: true }
   ];
-  var PRODUCTS = [
+  // Резервный набор на случай, если "Продукты и правила" (ops.products) ещё не
+  // загружены (самый первый запуск в новом браузере, до initOperations()).
+  var PRODUCTS_FALLBACK = [
     { code: "MRB-30", name: "Мурабаха 30 дней", markupRate: 0.025, installments: 1, minAmount: fromSum("1000000"), maxAmount: fromSum("50000000"), depositRate: 0.1 },
     { code: "MRB-90", name: "Мурабаха 90 дней", markupRate: 0.07, installments: 3, minAmount: fromSum("2000000"), maxAmount: fromSum("120000000"), depositRate: 0.1 },
     { code: "MRB-180", name: "Мурабаха 180 дней", markupRate: 0.13, installments: 6, minAmount: fromSum("5000000"), maxAmount: fromSum("300000000"), depositRate: 0.1 }
   ];
+  // Единый источник правды для условий Мурабахи: то, что руководитель операций
+  // видит и правит на экране "Продукты и правила" (ops.products), — это же самое
+  // используется при расчёте скоринга, оферты и checkout клиента.
+  function getProducts() {
+    if (!ops?.products?.length) return PRODUCTS_FALLBACK;
+    return ops.products.filter((p) => p.status === "active").map((p) => ({
+      code: p.code,
+      name: p.name,
+      markupRate: p.markup / 100,
+      installments: p.installments,
+      minAmount: fromSum(String(Math.round(p.min))),
+      maxAmount: fromSum(String(Math.round(p.max))),
+      depositRate: p.deposit / 100
+    }));
+  }
   var state = emptyState();
   var listeners = /* @__PURE__ */ new Set();
   function emptyState() {
@@ -2768,7 +2785,8 @@ html[data-theme="dark"] .adp-hint,html[data-theme="dark"] .mkt-lines-foot{backgr
   }
   function productFor(dealId) {
     const code = state.extras[dealId]?.productCode;
-    return PRODUCTS.find((p) => p.code === code) ?? PRODUCTS[1];
+    const products = getProducts();
+    return products.find((p) => p.code === code) ?? products[1];
   }
   function runCommand(dealId, command) {
     return executeCommand(dealId, command, currentActor());
@@ -2858,7 +2876,7 @@ html[data-theme="dark"] .adp-hint,html[data-theme="dark"] .mkt-lines-foot{backgr
   }
   function createNewDeal(input) {
     const amount = input.items.reduce((acc, i) => acc + i.unitPrice * BigInt(i.qty), 0n);
-    const product2 = PRODUCTS.find((p) => p.code === input.productCode) ?? PRODUCTS[1];
+    const product2 = getProducts().find((p) => p.code === input.productCode) ?? getProducts()[1];
     const id = nextDealId();
     const deal = createDeal({
       id,
@@ -2985,7 +3003,7 @@ html[data-theme="dark"] .adp-hint,html[data-theme="dark"] .mkt-lines-foot{backgr
         unitPrice: c.unitPrice
       }));
       const amount = items.reduce((acc, i) => acc + i.unitPrice * BigInt(i.qty), 0n);
-      const product2 = PRODUCTS.find((p) => p.code === scenario.product);
+      const product2 = getProducts().find((p) => p.code === scenario.product);
       const id = `MRB-${String(index + 1).padStart(6, "0")}`;
       let deal = createDeal({
         id,
@@ -6966,7 +6984,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
   }
   function clientShop() {
     const total = cartTotal();
-    const product2 = PRODUCTS.find((item) => item.code === productCode);
+    const product2 = getProducts().find((item) => item.code === productCode);
     const markup = total * BigInt(Math.round(product2.markupRate * 1e4)) / 10000n;
     const visible = CATALOGUE.map((item, index) => ({ item, index })).filter(({ item }) => clientCatalogueCategory === "all" || item.category === clientCatalogueCategory);
     return `<section class="client-screen"><header class="client-page-title"><button data-act="portal:client-tab:home"><i data-lucide="arrow-left"></i></button><div><h1>Каталог</h1><p>Проверенные товары</p></div><span class="client-cart-count">${basket2.reduce((n, row) => n + row.qty, 0)}</span></header>
@@ -6974,7 +6992,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     <div class="client-products">${visible.map(({ item, index }) => `<article class="client-product ${item.permitted ? "" : "blocked"}"><div class="client-product-icon"><i data-lucide="package"></i></div><div><small>${esc(item.supplier)}</small><h3>${esc(item.name)}</h3><p>${esc(item.sku)} · ИКПУ ${esc(item.ikpu)}</p>${item.restriction ? `<em>${esc(item.restriction)}</em>` : ""}<strong>${money(item.unitPrice)} сум</strong></div><button ${item.permitted ? "" : "disabled"} data-act="portal:add:${index}"><i data-lucide="plus"></i></button></article>`).join("") || `<div class="client-empty"><i data-lucide="package"></i><b>В этой категории пока нет товаров</b></div>`}</div>
     <section class="client-cart"><div class="client-section-title"><div><h2>Корзина</h2><p>${basket2.length ? `${basket2.length} позиций` : "Добавьте товары"}</p></div>${basket2.length ? `<button data-act="portal:clear">Очистить</button>` : ""}</div>
       ${basket2.map((row, index) => `<div class="client-cart-line"><div><b>${esc(row.item.name)}</b><span>${row.qty} × ${money(row.item.unitPrice)} сум</span></div><strong>${money(row.item.unitPrice * BigInt(row.qty))} сум</strong><button data-act="portal:remove:${index}"><i data-lucide="x"></i></button></div>`).join("")}
-      ${basket2.length ? `<label>Условия<select id="client-product">${PRODUCTS.map((item) => `<option value="${item.code}" ${item.code === productCode ? "selected" : ""}>${esc(item.name)} · ${(item.markupRate * 100).toFixed(1)}%</option>`).join("")}</select></label><div class="client-cart-total"><span>Себестоимость <b>${sums(total)}</b></span><span>Наценка <b>${sums(markup)}</b></span><strong>Итого <b>${sums(total + markup)}</b></strong></div><button class="btn btn-primary client-full-btn" data-act="portal:submit-application">Подать заявку</button><p class="client-legal-note">После одобрения wa’d подписывается отдельно. Закупка не начинается без вашего согласия.</p>` : ""}
+      ${basket2.length ? `<label>Условия<select id="client-product">${getProducts().map((item) => `<option value="${item.code}" ${item.code === productCode ? "selected" : ""}>${esc(item.name)} · ${(item.markupRate * 100).toFixed(1)}%</option>`).join("")}</select></label><div class="client-cart-total"><span>Себестоимость <b>${sums(total)}</b></span><span>Наценка <b>${sums(markup)}</b></span><strong>Итого <b>${sums(total + markup)}</b></strong></div><button class="btn btn-primary client-full-btn" data-act="portal:submit-application">Подать заявку</button><p class="client-legal-note">После одобрения wa’d подписывается отдельно. Закупка не начинается без вашего согласия.</p>` : ""}
     </section></section>`;
   }
   function clientApplications() {
@@ -7106,7 +7124,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     return p?.kind === "market" ? p.id : void 0;
   }
   function productBy(code) {
-    return PRODUCTS.find((item) => item.code === code) ?? PRODUCTS[0];
+    return getProducts().find((item) => item.code === code) ?? getProducts()[0];
   }
   function termDays(code) {
     const n = Number(String(code).split("-")[1]);
@@ -7164,7 +7182,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     const summary = checkoutSummary(total, code, availableSum);
     const lines = scheduleLines(total, code);
     return `<div class="adp-checkout">
-    <label>Условия Мурабахи<select id="${prefix}-product">${PRODUCTS.map((item) => `<option value="${item.code}" ${item.code === code ? "selected" : ""}>${esc(item.name)} · наценка ${(item.markupRate * 100).toFixed(1)}%</option>`).join("")}</select></label>
+    <label>Условия Мурабахи<select id="${prefix}-product">${getProducts().map((item) => `<option value="${item.code}" ${item.code === code ? "selected" : ""}>${esc(item.name)} · наценка ${(item.markupRate * 100).toFixed(1)}%</option>`).join("")}</select></label>
     <dl class="adp-sum">
       <div><dt>Себестоимость товара</dt><dd>${sums(total)}</dd></div>
       <div><dt>Наценка Nur Finance</dt><dd>${sums(summary.markup)}</dd></div>
@@ -7601,7 +7619,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
         return true;
       }
       const row = basket2.find((entry) => entry.item.sku === item.sku);
-      const product2 = PRODUCTS.find((entry) => entry.code === productCode) ?? PRODUCTS[0];
+      const product2 = getProducts().find((entry) => entry.code === productCode) ?? getProducts()[0];
       const minimumQty = Math.max(10, Number((product2.minAmount + item.unitPrice - 1n) / item.unitPrice));
       if (row) row.qty += 10;
       else basket2.push({ item, qty: minimumQty });
@@ -7625,7 +7643,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     const amount = Number(data.get("amount") ?? 0);
     const available = clientPortalSnapshot(sessionClientId()).client.available;
     productCode = String(data.get("product") ?? "MRB-90");
-    const product2 = PRODUCTS.find((item) => item.code === productCode) ?? PRODUCTS[0];
+    const product2 = getProducts().find((item) => item.code === productCode) ?? getProducts()[0];
     const min2 = Number(product2.minAmount / 100n);
     const max2 = Number(product2.maxAmount / 100n);
     const outsideProduct = amount < min2 || amount > max2;
