@@ -4837,7 +4837,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     <div class="modal-head"><div><span class="eyebrow">Запрос об актуальности заявки · ${esc(deal.id)}</span><h2 id="client-offer-title">${esc(itemsLabel)}</h2></div><button type="button" class="modal-x" data-act="ops:modal:close" aria-label="Закрыть"><i data-lucide="x"></i></button></div>
     <div style="padding:0 22px 22px">
       <p class="info-box">Nur Finance закупил товар и уточняет, актуальна ли для вас эта покупка на приведённых ниже условиях. Ознакомьтесь с себестоимостью, наценкой и графиком, затем подтвердите актуальность или откажитесь.</p>
-      ${itemsChanged ? `<div class="info-box danger-info"><b>При получении товара от поставщика список отличался от вашей заявки.</b> Изменённые позиции выделены красным — ознакомьтесь перед подтверждением.${itemsDiffTable(extras.originalItems, extras.items)}</div>` : ""}
+      ${itemsChanged ? `<div class="info-box danger-info"><b>При получении товара от поставщика список отличался от вашей заявки.</b> Изменённые позиции выделены красным — ознакомьтесь перед подтверждением.</div>${itemsDiffTable(extras.originalItems, extras.items)}` : ""}
       <div class="approval-summary"><span>Себестоимость</span><b>${sums(offer.cost)}</b><span>Наценка</span><b>${sums(offer.markup)}</b><span>Итоговая цена</span><b>${sums(offer.salePrice)}</b></div>
       <div class="section-title">График платежей</div>
       ${offerScheduleTable(offer.schedule)}
@@ -4983,9 +4983,11 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
   function clientWadModal(deal) {
     const extras = getExtras(deal.id);
     const itemsLabel = extras?.items?.map((item) => item.name).join(", ") ?? deal.clientInn;
+    const price = dealPriceSummary(deal);
     return `<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="client-wad-title">
     <div class="modal-head"><div><span class="eyebrow">Обещание купить · wa'd · ${esc(deal.id)}</span><h2 id="client-wad-title">${esc(itemsLabel)}</h2></div><button type="button" class="modal-x" data-act="ops:modal:close" aria-label="Закрыть"><i data-lucide="x"></i></button></div>
     <div style="padding:0 22px 6px">
+      <div class="approval-summary">${price.items.map((item) => `<span>${esc(item.name)}</span><b>${item.qty} × ${sums(item.unitPrice)}</b>`).join("")}<span>Количество</span><b>${price.totalQty} ед.</b><span>Себестоимость</span><b>${sums(price.cost)}</b><span>Наценка Мурабаха</span><b>${sums(price.markup)} (${(price.markupRate * 100).toFixed(1)}%)</b><span>Итоговая цена</span><b>${sums(price.total)}</b></div>
       <p class="info-box">Распишитесь пальцем или мышью — это ваше обязывающее обещание купить товар. Без него закупка у поставщика не начнётся (SCCP-1).</p>
       <div class="form-grid">
         <label>Ф.И.О. представителя<input id="wad-rep-name" type="text" value="${esc(wadForm.repName)}" placeholder="Иванов Иван" required></label>
@@ -7059,6 +7061,16 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     if (action === "sign") return `ops:client-contract:open:${dealId}`;
     return `do:${dealId}:${action}`;
   }
+  function dealPriceSummary(deal) {
+    const extras = getExtras(deal.id);
+    const items = extras?.items ?? [];
+    const totalQty = items.reduce((n, item) => n + item.qty, 0);
+    const product2 = productFor(deal.id);
+    const cost = deal.requestedAmount;
+    const markupRate = product2?.markupRate ?? 0;
+    const markup = cost * BigInt(Math.round(markupRate * 1e4)) / 10000n;
+    return { items, totalQty, cost, markupRate, markup, total: cost + markup };
+  }
   function depositInfoLine(deal) {
     if (!deal) return "";
     const product2 = productFor(deal.id);
@@ -7073,7 +7085,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     const deal = app.dealId ? getState().deals.find((item) => item.id === app.dealId) : void 0;
     const action = deal && (!deal.promise ? ["promise", "Подписать wa’d"] : deal.status.con === "CON_OFFER_SENT" ? ["accept", "Ознакомиться"] : deal.status.con === "CON_ACCEPTED" ? ["sign", "Подписать договор"] : deal.status.dlv === "DLV_DELIVERED" ? ["delivery-accept", "Принять товар"] : null);
     const canRefuse = deal?.status.con === "CON_OFFER_SENT";
-    return `<article class="client-list-card"><div><span>${esc(app.id)}</span>${pill(state3[0], state3[1])}</div><h3>${esc(app.item)}</h3><p>${asSum(app.amount)} · скоринг ${app.score}</p>${app.dealId ? `<small>Сделка ${esc(app.dealId)}</small>` : ""}${deal ? `<small>${esc(depositInfoLine(deal))}</small>` : ""}${action && deal ? `<div class="client-card-actions"><button class="btn btn-primary client-card-action" data-act="${clientTaskAct(esc(deal.id), action[0])}">${action[1]}</button>${canRefuse ? `<button class="btn client-card-action" data-act="ops:client-offer:open:${esc(deal.id)}">Отказаться</button>` : ""}</div>` : ""}</article>`;
+    return `<article class="client-list-card"><div><span>${esc(app.id)}</span>${pill(state3[0], state3[1])}</div><h3>${esc(app.item)}</h3><p>${asSum(app.amount)} · скоринг ${app.score}</p>${deal ? (() => { const price = dealPriceSummary(deal); return `<small>${price.totalQty} ед. · Наценка ${sums(price.markup)} (${(price.markupRate * 100).toFixed(1)}%) · Итого ${sums(price.total)}</small>`; })() : ""}${app.dealId ? `<small>Сделка ${esc(app.dealId)}</small>` : ""}${deal ? `<small>${esc(depositInfoLine(deal))}</small>` : ""}${action && deal ? `<div class="client-card-actions"><button class="btn btn-primary client-card-action" data-act="${clientTaskAct(esc(deal.id), action[0])}">${action[1]}</button>${canRefuse ? `<button class="btn client-card-action" data-act="ops:client-offer:open:${esc(deal.id)}">Отказаться</button>` : ""}</div>` : ""}</article>`;
   }
   function deliveryCard(deal) {
     const delivered = deal.status.dlv === "DLV_DELIVERED";
@@ -7158,7 +7170,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     const pendingChange = extras?.itemsChange?.status === "proposed";
     const action = tab2 === "orders" ? `<button class="btn btn-primary" data-act="do:${deal.id}:invoice"><i data-lucide="circle-check"></i>Дать согласие на продажу</button>` : tab2 === "handover" ? pendingChange ? `<button class="btn btn-primary" data-act="do:${deal.id}:items-confirm"><i data-lucide="list-checks"></i>Подтвердить список товаров</button>` : !deal.delivery?.pickedUpAt ? `<div class="btn-row"><div class="vendor-awaiting"><i data-lucide="truck"></i><span>${deal.delivery ? `Перевозчик назначен на ${esc((deal.delivery.pickupSlot || "").replace("T", " "))}` : "Ожидается назначение перевозчика Nur Finance"}</span></div><button class="btn btn-sm" data-act="do:${deal.id}:items-confirm"><i data-lucide="list-checks"></i>Изменить список товаров</button></div>` : `<div class="vendor-awaiting"><i data-lucide="truck"></i><span>Забрано перевозчиком</span></div>` : "";
     const openedAt = deal.audit[0]?.at ?? /* @__PURE__ */ new Date();
-    const changeNotice = tab2 === "handover" && pendingChange ? `<div class="info-box danger-info"><b>Курьер сообщил об изменении списка товаров.</b>${extras.itemsChange.note ? ` ${esc(extras.itemsChange.note)}` : ""}${itemsDiffTable(extras.originalItems, extras.itemsChange.items)}</div>` : "";
+    const changeNotice = tab2 === "handover" && pendingChange ? `<div class="info-box danger-info"><b>Курьер сообщил об изменении списка товаров.</b>${extras.itemsChange.note ? ` ${esc(extras.itemsChange.note)}` : ""}</div>${itemsDiffTable(extras.originalItems, extras.itemsChange.items)}` : "";
     return `<article class="vendor-order-card"><div class="vendor-order-main"><div class="vendor-order-id"><span>${esc(deal.id)}</span>${statusPill("pur", deal.status.pur)}</div><h3>${esc(extras?.items.map((item) => item.name).join(", ") || "Товары по заявке")}</h3><p class="vendor-buyer-line">${pill("Покупатель: Nur Finance", "accent")}</p><p>Грузополучатель (от имени Nur Finance): <b>${esc(extras?.clientName ?? deal.clientInn)}</b></p><div class="vendor-order-meta"><span><i data-lucide="boxes"></i>${extras?.items.reduce((n, item) => n + item.qty, 0) ?? 0} ед.</span><span><i data-lucide="calendar-days"></i>${dateOnly(openedAt.toISOString().slice(0, 10))}</span>${deal.supplierPayment?.paymentOrderNumber ? `<span><i data-lucide="landmark"></i>${esc(deal.supplierPayment.paymentOrderNumber)}</span>` : ""}${deal.delivery?.waybillNumber ? `<span><i data-lucide="file-text"></i>${esc(deal.delivery.waybillNumber)}</span>` : ""}</div>${changeNotice}</div><div class="vendor-order-price"><span>Сумма к продаже</span><strong>${sums(deal.supplierInvoice?.amount ?? deal.requestedAmount)}</strong>${action}</div></article>`;
   }
   function vendorSignInView() {
