@@ -4411,7 +4411,14 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     const a = ops.applications.find((item) => item.id === ops.guidedApplicationId);
     if (!a) return "";
     const stage = guidedStage(a);
+    const deal = a.dealId ? getDeal(a.dealId) : null;
     const portal2 = stage.performer === "party" ? stage.owner === "Покупатель" ? "client" : stage.owner === "Поставщик" ? "supplier" : "carrier" : "";
+    // Сессия портала (buyer/vendor/courier) отличается от раздела бэк-офиса
+    // (client/supplier/carrier); без входа в конкретную сессию контрагента
+    // портал показывал бы первого попавшегося клиента/поставщика, а не того,
+    // кто реально участвует в этой сделке.
+    const PORTAL_SESSION_KIND = { client: "buyer", supplier: "vendor", carrier: "courier" };
+    const partyId = portal2 === "client" ? a.clientId : portal2 === "supplier" ? a.supplierId : portal2 === "carrier" ? deal?.delivery?.carrierId ?? "" : "";
     const staffRoleFor = {
       "Финансовый менеджер": "R-03",
       "Шариатский контролёр": "R-05",
@@ -4419,7 +4426,7 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     };
     const requiredRole = staffRoleFor[stage.owner];
     const wrongRole = stage.performer === "staff" && requiredRole !== void 0 && currentUser().role !== requiredRole;
-    const control = stage.performer === "auto" ? `<span class="guided-cycle-auto"><i data-lucide="bot"></i>Выполняется автоматически — вмешательство не требуется</span>` : stage.performer === "party" ? `<button class="btn" type="button" data-act="nav:${portal2}">${esc(stage.action)}<i data-lucide="arrow-right"></i></button>` : wrongRole ? `<span class="guided-cycle-auto"><i data-lucide="user-round"></i>Действие выполняет ${esc(stage.owner)} — войдите под этой ролью</span>` : `<button class="btn btn-primary" type="button" data-act="ops:cycle:${stage.complete ? "open" : "next"}">${esc(stage.action)}<i data-lucide="arrow-right"></i></button>`;
+    const control = stage.performer === "auto" ? `<span class="guided-cycle-auto"><i data-lucide="bot"></i>Выполняется автоматически — вмешательство не требуется</span>` : stage.performer === "party" ? `<button class="btn" type="button" data-act="portal:enter:${PORTAL_SESSION_KIND[portal2]}:${esc(partyId)}">${esc(stage.action)}<i data-lucide="arrow-right"></i></button>` : wrongRole ? `<span class="guided-cycle-auto"><i data-lucide="user-round"></i>Действие выполняет ${esc(stage.owner)} — войдите под этой ролью</span>` : `<button class="btn btn-primary" type="button" data-act="ops:cycle:${stage.complete ? "open" : "next"}">${esc(stage.action)}<i data-lucide="arrow-right"></i></button>`;
     return `<section class="guided-cycle ${stage.complete ? "complete" : ""}">
     <div class="guided-cycle-head"><div><span>Как идёт сделка · ${esc(a.id)}</span><h2>${esc(stage.title)}</h2><p>${esc(stage.description)}</p></div><button class="guided-cycle-close" type="button" data-act="ops:cycle:stop" aria-label="Закрыть сценарий"><i data-lucide="x"></i></button></div>
     <div class="guided-cycle-steps">${cycleStepLabels.map((label, index) => `<div class="${index < stage.index ? "done" : index === stage.index ? "current" : ""}"><i>${index < stage.index ? "✓" : index + 1}</i><span>${esc(label)}</span></div>`).join("")}</div>
@@ -8957,15 +8964,21 @@ ${rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replace(/"/g, '
     }
     if (act === "portal:leave") {
       leavePortal();
-      clearNotice();
-      render();
+      // Раздел бэк-офиса (state.view) и портальная сессия — разные состояния;
+      // если не сбросить view тоже, следующий render() снова покажет тот же
+      // портал в «встроенном» виде вместо возврата в бэк-офис.
+      go("dashboard");
       return;
     }
     if (act.startsWith("portal:enter:")) {
       const [, , kind, id] = act.split(":");
       if (kind) enterPortal(kind, id ?? "");
-      clearNotice();
-      render();
+      // Портальная сессия (buyer/vendor/courier) и раздел бэк-офиса (client/
+      // supplier/carrier), где она отображается, — разные пространства имён;
+      // без этой карты «Наблюдение за циклом» переключало бы раздел, но не
+      // саму сессию, и показывало бы первого попавшегося контрагента.
+      const VIEW_FOR_PORTAL_KIND = { buyer: "client", vendor: "supplier", courier: "carrier", agent: "agent", market: "market" };
+      go(VIEW_FOR_PORTAL_KIND[kind] ?? kind);
       return;
     }
     if (act === "mobile-nav-toggle") {
